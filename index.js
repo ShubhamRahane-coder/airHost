@@ -148,6 +148,20 @@ app.post('/listings/find', asyncWrap(async (req, res) => {
     res.render('listings/find', { listings, searchData: req.body, title: "airHost Search Results" });
 }));
 
+// Route to show only the current user's listings
+app.get("/user/listings", isLoggedIn, asyncWrap(async (req, res) => {
+    const userId = req.session.userId;
+    // Find listings where the owner is the logged-in user
+    const listings = await Listing.find({ owner: userId }).populate("owner", "username");
+    
+    // We reuse the 'find.ejs' view but pass a custom title
+    res.render("listings/find", { 
+        listings, 
+        searchData: { location: "Your Properties" }, 
+        title: "My Listings | airHost" 
+    });
+}));
+
 app.get("/listings/new", isLoggedIn, (req, res) => res.render("listings/new", { title: "Become an airHost" }));
 
 app.post("/listings/createListing", isLoggedIn, validateBody(listingSchema), asyncWrap(async (req, res) => {
@@ -205,18 +219,33 @@ app.delete("/listings/:id", isLoggedIn, validateObjectId, asyncWrap(async (req, 
 
 // ================= REVIEW ROUTES =================
 
-app.post("/listings/:id/reviews", isLoggedIn, validateObjectId, validateBody(reviewSchema), asyncWrap(async (req, res) => {
-    // req.body now contains { rating, comment }
-    const review = new Review({ 
-        ...req.body, 
-        author: req.session.userId, 
-        listing: req.params.id 
-    });
-    await review.save();
-    await Listing.findByIdAndUpdate(req.params.id, { $push: { reviews: review._id } });
-    req.flash("success", "Review added!");
-    res.redirect(`/listings/${req.params.id}`);
-}));
+app.post("/listings/:id/reviews", isLoggedIn, validateObjectId, validateBody(reviewSchema), async (req, res, next) => {
+    try {
+        const review = new Review({ 
+            ...req.body, 
+            author: req.session.userId, 
+            listing: req.params.id 
+        });
+
+        // 1. Manually try to save
+        await review.save();
+
+        // 2. If successful, link to listing and redirect
+        await Listing.findByIdAndUpdate(req.params.id, { $push: { reviews: review._id } });
+        req.flash("success", "Review added!");
+        res.redirect(`/listings/${req.params.id}`);
+
+    } catch (err) {
+        // 3. If Mongoose validation fails, catch it HERE
+        if (err.name === "ValidationError") {
+            const msg = Object.values(err.errors).map(el => el.message).join(", ");
+            req.flash("error", msg);
+            return res.redirect(`/listings/${req.params.id}`); // Redirect back to the listing
+        }
+        // 4. If it's a different scary error (database down), send it to the global handler
+        next(err);
+    }
+});
 
 app.delete("/reviews/:id", isLoggedIn, asyncWrap(async (req, res) => {
     const review = await Review.findById(req.params.id);
@@ -253,13 +282,24 @@ app.get("/help", (req, res) => {
 // ================= ERROR HANDLING =================
 
 // FIX: Use a Regex literal to bypass path-to-regexp string parsing crash
+// ================= FINAL ERROR HANDLING =================
+
 app.all(/.*/, (req, res, next) => {
     next(new ExpressError(404, "Page Not Found"));
 });
 
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = "Something went wrong" } = err;
-    // Always provide empty searchData to avoid crashes on error pages
+
+    // SAFETY NET: If any route hits a Mongoose Validation error 
+    // and you didn't catch it locally, this catches it here.
+    if (err.name === "ValidationError") {
+        const flashMsg = Object.values(err.errors).map(el => el.message).join(", ");
+        req.flash("error", flashMsg);
+        return res.redirect("back"); // Keeps user on the form!
+    }
+
+    // Only actual 404s or serious Server Crashes show the error page
     res.status(statusCode).render("error/error", { 
         err, 
         message, 
