@@ -1,0 +1,86 @@
+<div class="flash-messages-wrapper">
+    <% if(success && success.length) { %>
+        <div class="alert alert-success alert-dismissible fade show custom-flash shadow-sm border-0" role="alert">
+            <div class="d-flex align-items-center">
+                <span class="material-symbols-outlined me-2 flash-icon text-success">check_circle</span>
+                <div class="flash-text"><%= success %></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <% if(error && error.length) { %>
+        <div class="alert alert-danger alert-dismissible fade show custom-flash shadow-sm border-0" role="alert">
+            <div class="d-flex align-items-center">
+                <span class="material-symbols-outlined me-2 flash-icon text-danger">error</span>
+                <div class="flash-text"><%= error %></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+</div>
+
+<style>
+    .flash-messages-wrapper {
+        position: fixed;
+        top: 110px;           /* Sits below your 100px navbar */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2500;
+        width: auto;
+        pointer-events: none;
+        text-align: center;
+    }
+
+    .custom-flash {
+        pointer-events: auto;
+        display: flex;         /* Use flex to handle the wider space */
+        align-items: center;
+        justify-content: space-between; /* Pushes text to left, button to right */
+        border-radius: 12px !important;
+        padding: 12px 20px !important;
+        background-color: #ffffff !important;
+        border: 0.4px solid !important;
+        border-left: 7px solid !important;
+        
+        /* --- IMPORTANT: Your requested width --- */
+        min-width: 40vw !important; 
+        max-width: 90vw;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    }
+
+    .alert-success.custom-flash { border-left-color: #22ad5c !important; }
+    .alert-danger.custom-flash { border-left-color: #ff385c !important; }
+
+    .flash-icon { font-size: 22px !important; flex-shrink: 0; }
+    
+    .flash-text { 
+        font-weight: 500; 
+        color: #222; 
+        font-size: 01.15rem; 
+        line-height: 1.9;
+        text-align: left; /* Keeps text aligned left within the wide box */
+    }
+
+    /* --- Centered Close Button for Wide Alert --- */
+    .custom-flash .btn-close {
+        position: relative; /* Use relative since the parent is flex-between */
+        margin-left: 20px;
+        padding: 10px !important; 
+        background-size: 12px;
+        opacity: 0.6;
+        flex-shrink: 0;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.custom-flash');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
+</script>

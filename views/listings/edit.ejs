@@ -1,0 +1,161 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="edit-listing-wrapper py-5">
+  <div class="container" style="max-width:700px;">
+    
+    <div class="mb-4 d-flex align-items-center gap-3">
+      <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </a>
+      <h2 class="fw-bold mb-0">Edit Listing</h2>
+    </div>
+
+    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4 bg-white">
+      <form action="/listings/<%= listing._id %>?_method=PUT" method="POST"
+            class="d-flex flex-column gap-4 needs-validation"
+            novalidate>
+
+        <div>
+          <label for="title" class="form-label fw-bold air-label">Property Title</label>
+          <input id="title" name="listing[title]" type="text"
+                 class="form-control air-input" value="<%= listing.title %>" required 
+                 placeholder="e.g. Modern Villa with Pool">
+          <div class="invalid-feedback">Title is required</div>
+        </div>
+
+        <div>
+          <label for="price" class="form-label fw-bold air-label">Price per night</label>
+          <div class="input-group">
+           <span class="input-group-text bg-white border rounded air-input">₹</span>
+            <input id="price" name="listing[price]" type="number" class="form-control air-input mx-1" value="1232" required="" placeholder="0.00" >
+          </div>
+          <div class="invalid-feedback">Price is required</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label for="location" class="form-label fw-bold air-label">Location</label>
+            <input id="location" name="listing[location]" type="text"
+                   class="form-control air-input" value="<%= listing.location %>" required placeholder="City, State">
+            <div class="invalid-feedback">Location is required</div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="country" class="form-label fw-bold air-label">Country</label>
+            <input id="country" name="listing[country]" type="text"
+                   class="form-control air-input" value="<%= listing.country %>" required placeholder="India">
+            <div class="invalid-feedback">Country is required</div>
+          </div>
+        </div>
+
+        <div>
+          <label for="image" class="form-label fw-bold air-label">Image URL</label>
+          <input id="image" name="listing[image][url]" type="text"
+                 class="form-control air-input" value="<%= listing.image.url %>" required placeholder="https://...">
+          <div class="invalid-feedback">Image URL is required</div>
+        </div>
+
+        <div>
+          <label for="description" class="form-label fw-bold air-label">Description</label>
+          <textarea id="description" name="listing[description]"
+                    class="form-control air-input"
+                    style="min-height:140px;"
+                    required placeholder="Tell guests what makes your place special..."><%= listing.description %></textarea>
+          <div class="invalid-feedback">Description is required</div>
+        </div>
+
+        <div class="p-3 bg-light rounded-4 border">
+          <p class="small fw-bold text-muted mb-3 text-uppercase">Geographic Details</p>
+          <div class="row g-3">
+            <div class="col-6">
+              <label for="lat" class="form-label small">Latitude</label>
+              <input id="lat" name="listing[lat]" type="number" step="any"
+                     class="form-control air-input bg-white" value="<%= listing.lat %>">
+            </div>
+            <div class="col-6">
+              <label for="lng" class="form-label small">Longitude</label>
+              <input id="lng" name="listing[lng]" type="number" step="any"
+                     class="form-control air-input bg-white" value="<%= listing.lng %>">
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-3 mt-2">
+          <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark px-4 py-2 rounded-3 fw-semibold">Cancel</a>
+          <button type="submit" class="btn btn-black flex-grow-1 py-2 fw-bold">Update Listing</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .edit-listing-wrapper {
+    background-color: #fcfcfc;
+    min-height: 90vh;
+  }
+
+  .air-label {
+    font-size: 0.9rem;
+    color: #222;
+    margin-bottom: 6px;
+  }
+
+  /* Custom Input Styling */
+  .air-input {
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #ddd;
+    background: #fff;
+    transition: all 0.2s ease;
+  }
+
+  .air-input:focus {
+    border-color: #000;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+    outline: none;
+  }
+
+  .input-group-text {
+    border: 1.5px solid #ddd;
+    border-radius: 0.75rem 0 0 0.75rem !important;
+  }
+
+  /* Black Button Theme */
+  .btn-black {
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-black:hover {
+    background: #222;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    color: #fff;
+  }
+
+  /* Validation Colors */
+  .was-validated .form-control:invalid {
+    border-color: #ff385c;
+  }
+  .was-validated .form-control:valid {
+    border-color: #000;
+  }
+</style>
+
+<script>
+(() => {
+  const form = document.querySelector('.needs-validation');
+  form.addEventListener('submit', event => {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    form.classList.add('was-validated');
+  });
+})();
+</script>

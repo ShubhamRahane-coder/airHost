@@ -1,0 +1,136 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="login-page-wrapper d-flex align-items-center justify-content-center">
+  <div class="container d-flex justify-content-center">
+    <div class="card shadow-lg p-4 border-0 login-card">
+      
+      <div class="text-center mb-4">
+        <div class="login-icon-circle mb-3 mx-auto">
+          <span class="material-symbols-outlined fs-1">lock</span>
+        </div>
+        <h2 class="fw-bold text-dark">Welcome Back</h2>
+        <p class="text-muted small">Login to manage your listings and bookings</p>
+      </div>
+
+      <% //if(error && error.length > 0) { %>
+        <!-- <div class="alert alert-air-danger alert-dismissible fade show d-flex align-items-center" role="alert">
+          <span class="material-symbols-outlined me-2 fs-5">error</span>
+          <div><%= error %></div>
+          <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div> -->
+      <% //} %>
+
+      <form action="/login" method="POST" class="needs-validation" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label fw-semibold small">Username or Email</label>
+          <input type="text" 
+                 class="form-control air-input" 
+                 id="username" 
+                 name="username" 
+                 required 
+                 placeholder="Enter your username or email">
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold small">Password</label>
+          <input type="password" 
+                 class="form-control air-input" 
+                 id="password" 
+                 name="password" 
+                 required 
+                 placeholder="Enter your password">
+        </div>
+
+        <button type="submit" class="btn btn-black w-100 py-2 fw-bold mb-3">Login</button>
+      </form>
+
+      <div class="text-center mt-2">
+        <p class="text-muted small">
+          Don't have an account? <a href="/register" class="text-dark fw-bold text-decoration-none hover-link">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .login-page-wrapper {
+    min-height: 85vh;
+    background: #fcfcfc;
+    padding: 2rem;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 1.5rem !important;
+    padding: 2.5rem !important;
+  }
+
+  /* Black Header Icon */
+  .login-icon-circle {
+    width: 64px;
+    height: 64px;
+    background: #000;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  /* Custom Inputs */
+  .air-input {
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #eee;
+    background: #f9f9f9;
+    transition: all 0.2s ease;
+  }
+
+  .air-input:focus {
+    background: #fff;
+    border-color: #000;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+    outline: none;
+  }
+
+  /* Black Button */
+  .btn-black {
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-black:hover {
+    background: #222;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    color: #fff;
+  }
+
+  /* Error Alert Styling */
+  .alert-air-danger {
+    background-color: #fff5f6;
+    color: #ff385c;
+    border: 1px solid #ffccd5;
+    border-radius: 12px;
+    font-size: 0.85rem;
+  }
+
+  .hover-link:hover {
+    text-decoration: underline !important;
+    color: #ff385c !important;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 576px) {
+    .login-card {
+      padding: 1.5rem !important;
+      border-radius: 1rem !important;
+    }
+  }
+</style>

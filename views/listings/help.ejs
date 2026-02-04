@@ -1,0 +1,132 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="help-hero py-5 mb-5 bg-black text-white">
+    <div class="container text-center py-4">
+        <h1 class="display-5 fw-bold mb-3">How can we help?</h1>
+        <div class="search-wrapper mx-auto mt-4" style="max-width: 600px;">
+           <div class="input-group input-group-lg shadow-sm" style="gap: 10px;">
+                <span class="input-group-text bg-white border-0 ps-4">
+                    <span class="material-symbols-outlined text-muted">search</span>
+                </span>
+                <input type="text" class="form-control border-0 py-3 fs-6" placeholder="Search for articles, guides, or FAQs...">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 help-card border-0 shadow-sm p-4 text-center">
+                <span class="material-symbols-outlined display-4 mb-3 text-dark">home</span>
+                <h5 class="fw-bold">Hosting on airHost</h5>
+                <p class="text-muted small">Learn how to create listings, manage bookings, and set house rules.</p>
+                <a href="#" class="stretched-link text-decoration-none text-dark fw-bold mt-2">Browse Guides</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 help-card border-0 shadow-sm p-4 text-center">
+                <span class="material-symbols-outlined display-4 mb-3 text-dark">payments</span>
+                <h5 class="fw-bold">Earnings & Payments</h5>
+                <p class="text-muted small">Information about payouts, taxes, and service fees for hosts.</p>
+                <a href="#" class="stretched-link text-decoration-none text-dark fw-bold mt-2">View FAQ</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 help-card border-0 shadow-sm p-4 text-center">
+                <span class="material-symbols-outlined display-4 mb-3 text-dark">security</span>
+                <h5 class="fw-bold">Safety & Security</h5>
+                <p class="text-muted small">How we protect your data and tips for staying safe as a guest or host.</p>
+                <a href="#" class="stretched-link text-decoration-none text-dark fw-bold mt-2">Learn More</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h3 class="fw-bold mb-4 text-center">Frequently Asked Questions</h3>
+            <div class="accordion accordion-flush shadow-sm rounded-4 overflow-hidden border" id="helpAccordion">
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            How do I become an airHost?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body text-muted">
+                            Simply click the "Become a Host" button in the navigation bar, fill in your property details, upload photos, and set your price. Your listing will be live instantly!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            When do I get paid?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body text-muted">
+                            Payouts are typically released 24 hours after a guest's scheduled check-in time. Processing times vary by bank.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Can I cancel a booking?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body text-muted">
+                            Yes, but cancellation policies apply. You can manage your reservations from your Host Dashboard.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 p-5 bg-light rounded-4 text-center shadow-sm">
+        <h4 class="fw-bold mb-2">Still need help?</h4>
+        <p class="text-muted mb-4">Our support team is available 24/7 to assist you with any issues.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="mailto:support@airhost.com" class="btn btn-dark px-4 py-2 fw-bold rounded-pill">Contact Support</a>
+            <button class="btn btn-outline-dark px-4 py-2 fw-bold rounded-pill">Live Chat</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .help-hero {
+        background: radial-gradient(circle at top left, #222, #000);
+        border-radius: 0 0 2rem 2rem;
+    }
+    .input-group-text, .form-control {
+        border-radius: 50px !important;
+    }
+    .help-card {
+        transition: all 0.3s ease;
+        border: 1px solid transparent !important;
+    }
+    .help-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        border-color: #000 !important;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        color: #000;
+        box-shadow: none;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+    .accordion-item:last-child {
+        border-bottom: 0;
+    }
+</style>

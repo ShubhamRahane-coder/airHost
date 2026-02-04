@@ -1,0 +1,95 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="register-page-wrapper d-flex align-items-center justify-content-center">
+  <div class="container d-flex justify-content-center">
+    <div class="card shadow-lg p-4 border-0 register-card">
+      
+      <div class="text-center mb-4">
+        <div class="register-icon-circle mb-3 mx-auto">
+          <span class="material-symbols-outlined fs-1">person_add</span>
+        </div>
+        <h2 class="fw-bold text-dark">Join airHost</h2>
+        <p class="text-muted small">Create an account to start hosting and traveling</p>
+      </div>
+
+      <form action="/register" method="POST" class="needs-validation" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label fw-semibold small">Username</label>
+          <input type="text" 
+                 class="form-control air-input" 
+                 id="username" 
+                 name="username" 
+                 required 
+                 placeholder="Choose a unique username">
+          <div class="invalid-feedback">Please enter a username.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label fw-semibold small">Email Address</label>
+          <input type="email" 
+                 class="form-control air-input" 
+                 id="email" 
+                 name="email" 
+                 required 
+                 placeholder="name@example.com">
+          <div class="invalid-feedback">A valid email is required.</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold small">Password</label>
+          <input type="password" 
+                 class="form-control air-input" 
+                 id="password" 
+                 name="password" 
+                 required 
+                 placeholder="Create a strong password">
+          <div class="invalid-feedback">Please create a password.</div>
+        </div>
+
+        <button type="submit" class="btn btn-black w-100 py-2 fw-bold mb-3">Create Account</button>
+      </form>
+
+      <div class="text-center mt-2">
+        <p class="text-muted small">
+          Already have an account? <a href="/login" class="text-dark fw-bold text-decoration-none hover-link">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (() => {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>
+
+<style>
+  /* Your existing styles remain the same */
+  .register-page-wrapper { min-height: 85vh; background: #fcfcfc; padding: 2rem; }
+  .register-card { width: 100%; max-width: 440px; border-radius: 1.5rem !important; padding: 2.5rem !important; }
+  .register-icon-circle { width: 64px; height: 64px; background: #000; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  
+  .air-input { border-radius: 0.75rem !important; padding: 0.75rem 1rem; border: 1.5px solid #eee; background: #f9f9f9; transition: all 0.2s ease; }
+  
+  /* Show red border on validation fail */
+  .was-validated .air-input:invalid {
+    border-color: #dc3545;
+    background-image: none; /* Removes default bootstrap icon if you prefer a clean look */
+  }
+
+  .air-input:focus { background: #fff; border-color: #000; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); outline: none; }
+  .btn-black { background: #000; color: #fff; border: none; border-radius: 0.75rem; transition: all 0.3s ease; }
+  .btn-black:hover { background: #222; transform: translateY(-2px); color: #fff; }
+  .invalid-feedback { font-size: 0.75rem; margin-top: 0.25rem; }
+</style>

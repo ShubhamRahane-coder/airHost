@@ -1,0 +1,18 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,html{
+    padding-top: 30px;
+    /* background-color: black; */
+}
+body{
+    width: 1824px;
+margin:auto;}
+
+.main-content{
+padding: 2rem 0;
+min-height: 100vh;
+}

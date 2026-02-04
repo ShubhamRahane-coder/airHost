@@ -1,0 +1,142 @@
+<div class="footer-bg-wrapper" style="background-color: #f7f7f7; border-top: 1px solid #ddd; width: 100%;">
+  
+  <footer class="airhost-footer container-fluid px-lg-5 px-4" style="max-width: 1824px; margin: 0 auto;">
+
+    <section class="inspiration">
+      <h3>Inspiration for future getaways</h3>
+      <div class="tabs">
+        <span class="active">Popular</span>
+        <span>Arts & culture</span>
+        <span>Beach</span>
+        <span>Mountains</span>
+        <span>Outdoors</span>
+        <span>Things to do</span>
+      </div>
+
+      <div class="places">
+        <div><strong>Madrid</strong><span>Flat rentals</span></div>
+        <div><strong>Dallas</strong><span>Apartment rentals</span></div>
+        <div><strong>Brooklyn</strong><span>Apartment rentals</span></div>
+        <div><strong>Milan</strong><span>Flat rentals</span></div>
+        <div><strong>London</strong><span>Holiday rentals</span></div>
+        <div><strong>Oahu</strong><span>House rentals</span></div>
+      </div>
+    </section>
+
+    <section class="footer-links">
+      <div>
+        <h4>Support</h4>
+        <a href="#">Help Centre</a>
+        <a href="#">AirCover</a>
+        <a href="#">Anti-discrimination</a>
+        <a href="#">Cancellation options</a>
+      </div>
+      <div>
+        <h4>Hosting</h4>
+        <a href="#">airHost your home</a>
+        <a href="#">Hosting resources</a>
+        <a href="#">Community forum</a>
+        <a href="#">Hosting responsibly</a>
+      </div>
+      <div>
+        <h4>airHost</h4>
+        <a href="#">Newsroom</a>
+        <a href="#">Careers</a>
+        <a href="#">Investors</a>
+        <a href="#">airHost.org emergency stays</a>
+      </div>
+    </section>
+
+    <section class="footer-bottom">
+      <div class="bottom-left">
+        <span>© 2026 airHost, Inc.</span>
+        <span class="d-none d-sm-inline">·</span>
+        <a href="#">Privacy</a>
+        <span class="d-none d-sm-inline">·</span>
+        <a href="#">Terms</a>
+        <span class="d-none d-sm-inline">·</span>
+        <a href="#">Sitemap</a>
+      </div>
+      <div class="lang-currency">
+        <span><i class="material-symbols-outlined fs-5">language</i> English (IN)</span>
+        <span>₹ INR</span>
+      </div>
+    </section>
+
+  </footer>
+</div>
+
+<style>
+  /* Base Footer Styling */
+  .airhost-footer {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #222;
+    padding: 48px 0 24px 0;
+  }
+
+  .airhost-footer h3 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+
+  /* Navigation Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #ddd;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs span { padding: 10px 16px; cursor: pointer; color: #717171; font-size: 14px; border-radius: 25px; transition: 0.2s; }
+  .tabs span:hover { background-color: #ebebeb; color: #000; }
+  .tabs .active { color: #000; border-bottom: 2px solid #000; border-radius: 0; }
+
+  /* Responsive Grid for Places */
+  .places {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 24px 12px;
+    padding: 24px 0;
+  }
+  .places strong { font-size: 14px; font-weight: 500; display: block; }
+  .places span { font-size: 14px; color: #717171; }
+
+  /* Link Sections */
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #ddd;
+    margin-top: 30px;
+    padding-top: 40px;
+    gap: 40px;
+  }
+  .footer-links h4 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .footer-links a { display: block; margin-bottom: 12px; text-decoration: none; color: #222; font-size: 14px; width: fit-content; }
+  .footer-links a:hover { text-decoration: underline; }
+
+  /* Bottom Bar */
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #ddd;
+    margin-top: 40px;
+    padding-top: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 14px;
+  }
+  .bottom-left { display: flex; gap: 8px; align-items: center; }
+  .bottom-left a { text-decoration: none; color: #222; }
+  .lang-currency { display: flex; gap: 24px; font-weight: 600; }
+  .lang-currency span { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 992px) {
+    .places { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .places { grid-template-columns: repeat(2, 1fr); }
+    .footer-links { grid-template-columns: 1fr; gap: 20px; }
+    .footer-bottom { flex-direction: column-reverse; text-align: center; justify-content: center; }
+  }
+</style>

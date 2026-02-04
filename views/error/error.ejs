@@ -1,0 +1,102 @@
+<% layout('layouts/boilerplate') %>
+
+<style>
+  .error-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .error-card {
+    background: #fff;
+    border: 1px solid #dddddd;
+    border-radius: 16px;
+    padding: 48px;
+    max-width: 550px;
+    width: 100%;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+
+  .error-code {
+    font-size: 80px;
+    font-weight: 800;
+    background: linear-gradient(45deg, #FF385C, #bd1e59);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .error-icon {
+    font-size: 48px;
+    color: #FF385C;
+    margin-bottom: 24px;
+  }
+
+  .error-message {
+    font-size: 18px;
+    color: #222222;
+    margin-bottom: 32px;
+    font-weight: 400;
+  }
+
+  .btn-airhost {
+    background-color: #222222;
+    color: #fff;
+    padding: 14px 24px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+
+  .btn-airhost:hover {
+    background-color: #000;
+    color: #fff;
+    transform: scale(1.02);
+  }
+
+  .debug-info {
+    margin-top: 40px;
+    text-align: left;
+    background: #f7f7f7;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #717171;
+    border: 1px dashed #ddd;
+    overflow-x: auto;
+  }
+</style>
+
+<div class="container error-container">
+  <div class="error-card">
+    <span class="material-symbols-outlined error-icon">
+      error_medley
+    </span>
+    
+    <div class="error-code">
+      <%= err.statusCode || 500 %>
+    </div>
+
+    <h2 class="fw-bold mb-3">Something went wrong</h2>
+    
+    <p class="error-message">
+      <%= message %>
+    </p>
+
+    <a href="/" class="btn-airhost">
+      Back to airHost home
+    </a>
+
+    <% if(process.env.NODE_ENV !== 'production' && err.stack) { %>
+      <div class="debug-info">
+        <strong>Debug Stack Trace:</strong>
+        <pre class="mt-2 mb-0"><code><%= err.stack %></code></pre>
+      </div>
+    <% } %>
+  </div>
+</div>
