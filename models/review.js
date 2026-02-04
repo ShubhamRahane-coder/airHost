@@ -12,7 +12,7 @@ const ReviewSchema = new Schema({
     type: String, 
     required: [true, "Review text is required"], 
     trim: true,
-    minlength: [5, "Review must be at least 5 characters"]
+    minlength: [4, "Review must be at least 4 characters"]
   },
   author: { 
     type: Schema.Types.ObjectId, 

@@ -99,7 +99,7 @@
             <h6 class="fw-bold mb-3">Add a Review</h6>
             <form action="/listings/<%= listing._id %>/reviews" method="POST">
               <div class="mb-3">
-                <label class="form-label small fw-semibold">Rating</label>
+                <label class="form-label small fw-semibold">Rating is required</label>
                 <div class="star-rating d-flex flex-row-reverse justify-content-end">
                    <% [5,4,3,2,1].forEach(num => { %>
                     <input type="radio" name="rating" value="<%= num %>" id="star<%= num %>" required>
