@@ -74,23 +74,43 @@
           <h4 class="mb-0 fw-bold">₹ <%= listing.price.toLocaleString("en-IN") %> <small class="fw-light text-muted">/ night</small></h4>
           <a href="#" class="text-muted small text-decoration-underline">Show price breakdown</a>
         </div>
-        <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
-          <div class="row g-0 border-bottom">
-            <div class="col-6 border-end p-2">
-              <label class="small fw-bold d-block">Check-in</label>
-              <span class="small text-muted">2/20/2026</span>
+        
+        <form action="/listings/<%= listing._id %>/reserve" method="POST">
+          <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
+            <div class="row g-0 border-bottom">
+              <div class="col-6 border-end p-2">
+                <label class="small fw-bold d-block">Check-in</label>
+                <input type="date" name="booking[checkin]" class="date-input-flat" required value="2026-02-20">
+              </div>
+              <div class="col-6 p-2">
+                <label class="small fw-bold d-block">Checkout</label>
+                <input type="date" name="booking[checkout]" class="date-input-flat" required value="2026-02-22">
+              </div>
             </div>
-            <div class="col-6 p-2">
-              <label class="small fw-bold d-block">Checkout</label>
-              <span class="small text-muted">2/22/2026</span>
+            
+            <div class="row g-0">
+              <div class="col-6 border-end p-2">
+                <label class="small fw-bold d-block">Adults</label>
+                <select name="booking[adults]" class="date-input-flat">
+                  <option value="1">1 Adult</option>
+                  <option value="2">2 Adults</option>
+                  <option value="3">3 Adults</option>
+                  <option value="4">4 Adults</option>
+                </select>
+              </div>
+              <div class="col-6 p-2">
+                <label class="small fw-bold d-block">Children</label>
+                <select name="booking[children]" class="date-input-flat">
+                  <option value="0">0 Children</option>
+                  <option value="1">1 Child</option>
+                  <option value="2">2 Children</option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="p-2">
-            <label class="small fw-bold d-block">Guests</label>
-            <span class="small text-muted">1 guest</span>
-          </div>
-        </div>
-        <button class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
+          <button type="submit" class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
+        </form>
+
         <p class="text-center small text-muted mb-0">You won't be charged yet</p>
         
         <div class="mt-4 p-3 border rounded-3 bg-light-subtle d-flex align-items-center">
@@ -99,7 +119,6 @@
         </div>
       </div>
     </div>
-
     <hr class="my-5">
 
     <div class="col-12 mb-5">
@@ -191,9 +210,21 @@
   .amenity-item { display: flex; align-items: center; }
   .amenity-item span { margin-right: 12px; font-size: 24px; color: #484848; }
 
-  /* Reservation Card */
+  /* Reservation Card & DATE INPUT FIX */
   .reservation-card { box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; border-radius: 1rem; }
   .reservation-dates label { text-transform: uppercase; font-size: 10px; }
+
+  .date-input-flat {
+    border: none;
+    background: transparent;
+    font-size: 0.875rem; 
+    color: #6c757d;      
+    width: 100%;
+    padding: 0;
+    outline: none;
+    cursor: pointer;
+  }
+  .date-input-flat:focus { color: #212529; }
 
   /* Star Rating System */
   .star-rating input { display: none; }
@@ -233,10 +264,7 @@
         iconAnchor: [11, 11]
       });
 
-      
       L.marker([<%= listing.lat %>, <%= listing.lng %>], { icon: icon }).addTo(map);
-      
-      // Ensures the map tiles load correctly in the full-width container
       setTimeout(() => { map.invalidateSize(); }, 400);
     <% } %>
   });
