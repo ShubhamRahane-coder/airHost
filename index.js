@@ -274,12 +274,15 @@ app.get("/profile", isLoggedIn, asyncWrap(async (req, res) => {
 
 // / ================= HELP SECTION =================
 app.get("/help", (req, res) => {
-    res.render("listings/help", { title: "Help Centre | airHost" });
+    res.render("helpPages/help", { title: "Help Centre | airHost" });
 });
 
 // Route to display the Host Guidance Page
 app.get("/host/guidance", (req, res) => {
-    res.render("listings/guidance.ejs");
+    res.render("helpPages/guidance", { title: "Host Guidance | airHost" });
+});
+app.get("/info/webAppCreater",(req, res) => {
+    res.render("helpPages/webOwner", { title: "Web App Creators | airHost" });
 });
 
 
