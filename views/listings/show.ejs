@@ -28,7 +28,7 @@
     </div>
 
     <div class="col-12 mb-4">
-      <div class="show-img-container shadow-sm">
+      <div class="show-img-container shadow-sm position-relative">
         <img src="<%= listing.image.url %>" class="show-img rounded-4" alt="<%= listing.title %>">
         <% if (listing.price > 10000) { %>
           <div class="premium-badge">Premium Stay</div>
@@ -76,100 +76,51 @@
         </div>
         
         <form action="/listings/<%= listing._id %>/reserve" method="POST">
-  <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
-    <div class="row g-0 border-bottom">
-      <div class="col-6 border-end p-2">
-        <label class="small fw-bold d-block">Check-in</label>
-        <input type="date" name="booking[checkin]" class="date-input-flat w-100 border-0" required value="2026-02-20">
-      </div>
-      <div class="col-6 p-2">
-        <label class="small fw-bold d-block">Checkout</label>
-        <input type="date" name="booking[checkout]" class="date-input-flat w-100 border-0" required value="2026-02-22">
-      </div>
-    </div>
+          <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
+            <div class="row g-0 border-bottom">
+              <div class="col-6 border-end p-2">
+                <label class="small fw-bold d-block">Check-in</label>
+                <input type="date" name="reservation[checkIn]" class="date-input-flat w-100 border-0" required value="2026-02-20">
+              </div>
+              <div class="col-6 p-2">
+                <label class="small fw-bold d-block">Checkout</label>
+                <input type="date" name="reservation[checkOut]" class="date-input-flat w-100 border-0" required value="2026-02-22">
+              </div>
+            </div>
 
-    <div class="row g-0 p-2">
-      <div class="col-6 border-end px-2">
-        <label class="fw-bold d-block" style="font-size: 11px; text-transform: uppercase;">Adults (13+)</label>
-        <div class="d-flex align-items-center justify-content-between">
-          <input type="number" id="adults" name="booking[adults]" 
-                 class="form-control form-control-sm border-0 p-0 shadow-none bg-transparent" 
-                 value="1" min="1" max="15">
-          <div class="d-flex flex-column controls">
-            <span class="material-symbols-outlined clickable" onclick="changeVal('adults', 1)">keyboard_arrow_up</span>
-            <span class="material-symbols-outlined clickable" onclick="changeVal('adults', -1)">keyboard_arrow_down</span>
+            <div class="row g-0 p-2">
+              <div class="col-6 border-end px-2">
+                <label class="fw-bold d-block" style="font-size: 11px; text-transform: uppercase;">Adults (13+)</label>
+                <div class="d-flex align-items-center justify-content-between">
+                  <input type="number" id="adults" name="reservation[adults]" 
+                         class="form-control form-control-sm border-0 p-0 shadow-none bg-transparent" 
+                         value="1" min="1" max="15">
+                  <div class="d-flex flex-column controls">
+                    <span class="material-symbols-outlined clickable" onclick="changeVal('adults', 1)">keyboard_arrow_up</span>
+                    <span class="material-symbols-outlined clickable" onclick="changeVal('adults', -1)">keyboard_arrow_down</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-6 px-2">
+                <label class="fw-bold d-block" style="font-size: 11px; text-transform: uppercase;">Children (2-12)</label>
+                <div class="d-flex align-items-center justify-content-between">
+                  <input type="number" id="children" name="reservation[children]" 
+                         class="form-control form-control-sm border-0 p-0 shadow-none bg-transparent" 
+                         value="0" min="0" max="10">
+                  <div class="d-flex flex-column controls">
+                    <span class="material-symbols-outlined clickable" onclick="changeVal('children', 1)">keyboard_arrow_up</span>
+                    <span class="material-symbols-outlined clickable" onclick="changeVal('children', -1)">keyboard_arrow_down</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      <div class="col-6 px-2">
-        <label class="fw-bold d-block" style="font-size: 11px; text-transform: uppercase;">Children (2-12)</label>
-        <div class="d-flex align-items-center justify-content-between">
-          <input type="number" id="children" name="booking[children]" 
-                 class="form-control form-control-sm border-0 p-0 shadow-none bg-transparent" 
-                 value="0" min="0" max="10">
-          <div class="d-flex flex-column controls">
-            <span class="material-symbols-outlined clickable" onclick="changeVal('children', 1)">keyboard_arrow_up</span>
-            <span class="material-symbols-outlined clickable" onclick="changeVal('children', -1)">keyboard_arrow_down</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <button type="submit" class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
-</form>
+          <input type="hidden" name="reservation[price]" value="<%= listing.price %>">
 
-<style>
-  /* Base Styling */
-  .date-input-flat, .form-control-sm {
-    outline: none;
-    font-size: 14px;
-    color: #222;
-  }
-
-  /* Hide default browser arrows */
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  /* Focus handling */
-  input:focus {
-    box-shadow: none !important;
-    background-color: transparent !important;
-  }
-
-  /* Custom Arrow Styling */
-  .controls {
-    user-select: none;
-    line-height: 0.8;
-  }
-
-  .clickable {
-    font-size: 18px !important;
-    cursor: pointer;
-    color: #717171;
-    transition: color 0.2s;
-  }
-
-  .clickable:hover {
-    
-    color: #ff385c;
-  }
-</style>
-
-
-<script>
-  function changeVal(id, delta) {
-    const input = document.getElementById(id);
-    const newVal = parseInt(input.value) + delta;
-    if (newVal >= input.min && newVal <= input.max) {
-      input.value = newVal;
-    }
-  }
-</script>
+          <button type="submit" class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
+        </form>
 
         <p class="text-center small text-muted mb-0">You won't be charged yet</p>
         
@@ -189,14 +140,11 @@
             <div class="p-4 rounded-4 border bg-white shadow-sm">
               <h5 class="fw-bold mb-3">Leave a Review</h5>
               <form action="/listings/<%= listing._id %>/reviews" method="POST" class="needs-validation" novalidate>
-                <div class="mb-3">
-                  <label class="form-label fw-semibold mb-0">Rating</label>
-                  <div class="star-rating d-flex flex-row-reverse justify-content-end">
-                    <% [5,4,3,2,1].forEach(num => { %>
-                      <input type="radio" name="rating" value="<%= num %>" id="rate<%= num %>" required>
-                      <label for="rate<%= num %>"><span class="material-symbols-outlined">star</span></label>
-                    <% }) %>
-                  </div>
+                <div class="star-rating d-flex flex-row-reverse justify-content-end mb-3">
+                  <% [5,4,3,2,1].forEach(num => { %>
+                    <input type="radio" name="rating" value="<%= num %>" id="rate<%= num %>" required>
+                    <label for="rate<%= num %>"><span class="material-symbols-outlined">star</span></label>
+                  <% }) %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Your Comment</label>
@@ -238,7 +186,6 @@
                           </div>
                         </div>
                       </div>
-                      
                       <p class="small text-muted mb-2"><%= review.comment %></p>
                       <% if (currentUser && (currentUser.role === "admin" || (review.author && currentUser._id.toString() === review.author._id.toString()))) { %>
                         <form action="/reviews/<%= review._id %>?_method=DELETE" method="POST">
@@ -280,59 +227,34 @@
   .amenity-item { display: flex; align-items: center; }
   .amenity-item span { margin-right: 12px; font-size: 24px; color: #484848; }
 
-  /* Reservation Form Styles */
   .reservation-card { box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; border-radius: 1rem; }
-  .reservation-dates label { text-transform: uppercase; font-size: 10px; }
-  .date-input-flat {
-    border: none;
-    background: transparent;
-    font-size: 0.85rem; 
-    color: #717171;      
-    width: 100%;
-    padding: 0;
-    outline: none;
-    cursor: pointer;
-  }
+  .date-input-flat { border: none; background: transparent; font-size: 0.85rem; color: #717171; outline: none; cursor: pointer; }
+  
+  .author-letter-badge { width: 40px; height: 40px; background: #e7e4e4; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-  /* Author Badges */
-  .author-img-container { width: 40px; height: 40px; }
-  .author-pfp { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 1px solid #eee; }
-
-  .author-letter-badge {
-    width: 40px;
-    height: 40px;
-    background: #e7e4e4;
-    color: #000000;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.02rem;
-}
-
-  /* Star Rating */
   .star-rating input { display: none; }
   .star-rating label { color: #ddd; cursor: pointer; transition: 0.2s; font-size: 28px; }
   .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { 
     color: #ff385c; font-variation-settings: 'FILL' 1; 
   }
 
-  /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #d3d3d3; border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ff385c; }
+  .controls { user-select: none; line-height: 0.8; }
+  .clickable { font-size: 18px !important; cursor: pointer; color: #717171; transition: 0.2s; }
+  .clickable:hover { color: #ff385c; }
 
-  #map { width: 100% !important; height: 450px; z-index: 1; display: block; }
-
-  @media (max-width: 991px) {
-    .reservation-card { position: static !important; margin-top: 2rem; }
-  }
+  #map { z-index: 1; display: block; }
 </style>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+  function changeVal(id, delta) {
+    const input = document.getElementById(id);
+    const newVal = parseInt(input.value) + delta;
+    if (newVal >= input.min && newVal <= input.max) {
+      input.value = newVal;
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     <% if (listing.lat && listing.lng) { %>
       const map = L.map('map', { scrollWheelZoom: true }).setView([<%= listing.lat %>, <%= listing.lng %>], 13);

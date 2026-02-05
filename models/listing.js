@@ -56,19 +56,19 @@ const listingSchema = new Schema(
     },
 
     // ✅ Map support
-   lat: {
-  type: Number,
-  min: [-90, "Latitude must be >= -90"],
-  max: [90, "Latitude must be <= 90"],
-  default: 18.879702 // Default Latitude (New Delhi)
-},
+    lat: {
+      type: Number,
+      min: [-90, "Latitude must be >= -90"],
+      max: [90, "Latitude must be <= 90"],
+      default: 18.879702, // Default Latitude (New Delhi)
+    },
 
-lng: {
-  type: Number,
-  min: [-180, "Longitude must be >= -180"],
-  max: [180, "Longitude must be <= 180"],
-  default: 72.140273 // Default Longitude (New Delhi)
-},
+    lng: {
+      type: Number,
+      min: [-180, "Longitude must be >= -180"],
+      max: [180, "Longitude must be <= 180"],
+      default: 72.140273, // Default Longitude (New Delhi)
+    },
 
     owner: {
       type: Schema.Types.ObjectId,
@@ -82,10 +82,16 @@ lng: {
         ref: "Review",
       },
     ],
+    reservations: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Reservation",
+      },
+    ],
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.model("Listing", listingSchema);

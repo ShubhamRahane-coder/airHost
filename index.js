@@ -13,6 +13,8 @@ import { fileURLToPath } from "url";
 import User from "./models/user.js";
 import Listing from "./models/listing.js";
 import Review from "./models/review.js";
+import Reservation from "./models/reservation.js"; 
+
 
 // Middleware
 import { validateBody } from "./middleware/validate.js";
@@ -266,11 +268,89 @@ app.delete("/reviews/:id", isLoggedIn, asyncWrap(async (req, res) => {
 
 app.get("/profile", isLoggedIn, asyncWrap(async (req, res) => {
     // You can also fetch specific user listings here to display them
-    res.render("user/profile", { title: "My Profile | airHost" });
+    res.render("dashboard/profile", { title: "My Profile | airHost" });
 }));
 
 
+// / ================= Dashboard SECTION =================
 
+app.get("/dashboard/reservations", isLoggedIn, asyncWrap(async (req, res) => {
+    // FIX: Use req.session.userId because that's where you store the ID
+    const listings = await Listing.find({ owner: req.session.userId })
+        .populate({
+            path: 'reservations',
+            populate: { path: 'guest', select: 'username' } // Only get username for safety
+        });
+
+    res.render("dashboard/reservationDashboard", { 
+        listings, 
+        title: "Reservation Dashboard | airHost" 
+    });
+}));
+
+
+// Route to update reservation details (The "Reflex")
+app.put("/dashboard/reservations/:id", isLoggedIn, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    const { reservation } = req.body;
+
+    // Convert checkbox 'on' value to Boolean
+    reservation.isVerified = req.body.reservation.isVerified === 'on';
+
+    const updatedRes = await Reservation.findByIdAndUpdate(id, { ...reservation }, { new: true });
+    
+    if (!updatedRes) {
+        req.flash("error", "Reservation not found.");
+        return res.redirect("/dashboard/reservations");
+    }
+
+    req.flash("success", "Reservation details updated!");
+    res.redirect("/dashboard/reservations");
+}));
+
+
+app.delete("/dashboard/reservations/:id", isLoggedIn, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    
+    // 1. Find the reservation to get the listing ID it belongs to
+    const reservation = await Reservation.findById(id);
+    if (reservation) {
+        // 2. Remove the reservation reference from the Listing
+        await Listing.findByIdAndUpdate(reservation.listing, { $pull: { reservations: id } });
+        // 3. Delete the actual reservation
+        await Reservation.findByIdAndDelete(id);
+    }
+
+    req.flash("success", "Reservation deleted.");
+    res.redirect("/dashboard/reservations");
+}));
+
+
+app.post("/listings/:id/reserve", isLoggedIn, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    // Extracting the new guest count fields from the request body
+    const { checkIn, checkOut, price, adults, children } = req.body.reservation;
+
+    const newReservation = new Reservation({
+        checkIn,
+        checkOut,
+        price,
+        // Adding the counts to the document
+        guests: {
+            adults: parseInt(adults) || 1,
+            children: parseInt(children) || 0
+        },
+        guest: req.session.userId,
+        listing: id,
+        status: "Pending"
+    });
+
+    await newReservation.save();
+    await Listing.findByIdAndUpdate(id, { $push: { reservations: newReservation._id } });
+
+    req.flash("success", "Reservation request sent to host!");
+    res.redirect(`/listings/${id}`);
+}));
 
 // / ================= HELP SECTION =================
 app.get("/help", (req, res) => {
