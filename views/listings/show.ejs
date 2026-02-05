@@ -1,5 +1,7 @@
 <% layout("layouts/boilerplate") %>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
 <div class="container show-container mt-5">
   <div class="row">
     <div class="col-12 mb-3">
@@ -45,145 +47,196 @@
             <p class="text-muted small mb-0">Member since 2026</p>
           </div>
         </div>
-
         <h5 class="fw-bold mb-3">About this place</h5>
         <p class="listing-desc text-secondary"><%= listing.description %></p>
-        
-        <div class="price-highlight mt-4 p-3 rounded-3 d-flex justify-content-between align-items-center">
-          <span>Current Price</span>
-          <h4 class="mb-0 fw-bold text-dark">₹ <%= listing.price.toLocaleString("en-IN") %> <small class="fw-light text-muted">/ night</small></h4>
-        </div>
       </div>
 
-      <% if (listing.lat && listing.lng) { %>
-        <div class="mb-5">
-          <h5 class="fw-bold mb-3">Where you'll be</h5>
-          <div id="map" class="rounded-4 shadow-sm border"></div>
+      <div class="amenities-section mb-5 p-2">
+        <h5 class="fw-bold mb-4">What this place offers</h5>
+        <div class="row g-3">
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">cooking</span> Kitchen</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">wifi</span> Wifi</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">laptop_mac</span> Dedicated workspace</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">elevator</span> Lift</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">ac_unit</span> Air conditioning</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">air_freshener</span> Hair dryer</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">kitchen</span> Fridge</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">microwave</span> Microwave</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">smoking_rooms</span> Smoking allowed</div>
+          <div class="col-6 mb-2 amenity-item"><span class="material-symbols-outlined">calendar_today</span> Long-term stays allowed</div>
         </div>
-      <% } %>
+      </div>
     </div>
 
     <div class="col-lg-5">
-      <div class="review-section sticky-top p-4 rounded-4 shadow-sm border bg-white" style="top: 100px; z-index: 1;">
-        <h5 class="fw-bold mb-4">Guest Reviews</h5>
+      <div class="reservation-card p-4 rounded-4 shadow border bg-white mb-4 sticky-top" style="top: 100px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="mb-0 fw-bold">₹ <%= listing.price.toLocaleString("en-IN") %> <small class="fw-light text-muted">/ night</small></h4>
+          <a href="#" class="text-muted small text-decoration-underline">Show price breakdown</a>
+        </div>
+        <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
+          <div class="row g-0 border-bottom">
+            <div class="col-6 border-end p-2">
+              <label class="small fw-bold d-block">Check-in</label>
+              <span class="small text-muted">2/20/2026</span>
+            </div>
+            <div class="col-6 p-2">
+              <label class="small fw-bold d-block">Checkout</label>
+              <span class="small text-muted">2/22/2026</span>
+            </div>
+          </div>
+          <div class="p-2">
+            <label class="small fw-bold d-block">Guests</label>
+            <span class="small text-muted">1 guest</span>
+          </div>
+        </div>
+        <button class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
+        <p class="text-center small text-muted mb-0">You won't be charged yet</p>
         
-        <div class="review-list custom-scrollbar mb-4" style="max-height: 400px; overflow-y: auto;">
-          <% if (listing.reviews && listing.reviews.length > 0) { %>
-            <% listing.reviews.forEach(review => { %>
-              <div class="review-card p-3 rounded-3 border mb-3 bg-light-subtle">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <div class="fw-bold small text-dark"><%= review.author ? review.author.username : "Guest" %></div>
-                  <div class="d-flex align-items-center">
-                    <span class="material-symbols-outlined fs-6 text-warning me-1">star</span>
-                    <span class="small fw-bold"><%= review.rating %></span>
+        <div class="mt-4 p-3 border rounded-3 bg-light-subtle d-flex align-items-center">
+          <span class="material-symbols-outlined text-danger me-2">cancel</span>
+          <p class="small mb-0 fw-semibold">Free cancellation before 19 February</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-5">
+
+    <div class="col-12 mb-5">
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <% if (currentUser) { %>
+            <div class="p-4 rounded-4 border bg-white shadow-sm">
+              <h5 class="fw-bold mb-3">Leave a Review</h5>
+              <form action="/listings/<%= listing._id %>/reviews" method="POST" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold mb-0">Rating</label>
+                  <div class="star-rating d-flex flex-row-reverse justify-content-end">
+                    <% [5,4,3,2,1].forEach(num => { %>
+                      <input type="radio" name="rating" value="<%= num %>" id="rate<%= num %>" required>
+                      <label for="rate<%= num %>"><span class="material-symbols-outlined">star</span></label>
+                    <% }) %>
                   </div>
                 </div>
-                <p class="small text-muted mb-2"><%= review.comment %></p>
-                <% if (currentUser && (currentUser.role === "admin" || (review.author && currentUser._id.toString() === review.author._id.toString()))) { %>
-                  <form action="/reviews/<%= review._id %>?_method=DELETE" method="POST">
-                    <button class="btn btn-link text-danger p-0 small text-decoration-none" type="submit">Delete</button>
-                  </form>
-                <% } %>
-              </div>
-            <% }) %>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Your Comment</label>
+                  <textarea name="comment" rows="4" class="form-control rounded-3" placeholder="How was your experience?" required></textarea>
+                </div>
+                <button class="btn btn-air-primary w-100 py-2 fw-bold">Submit Review</button>
+              </form>
+            </div>
           <% } else { %>
-            <div class="text-center py-4">
-              <span class="material-symbols-outlined fs-1 text-light">chat_bubble</span>
-              <p class="text-muted small mt-2">No reviews yet. Be the first!</p>
+            <div class="p-4 rounded-4 border bg-light text-center">
+              <p class="mb-0">Please <a href="/login" class="fw-bold text-dark">login</a> to leave a review.</p>
             </div>
           <% } %>
         </div>
 
-        <% if (currentUser) { %>
-          <div class="border-top pt-4">
-            <h6 class="fw-bold mb-3">Add a Review</h6>
-            <form action="/listings/<%= listing._id %>/reviews" method="POST">
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Rating is required</label>
-                <div class="star-rating d-flex flex-row-reverse justify-content-end">
-                   <% [5,4,3,2,1].forEach(num => { %>
-                    <input type="radio" name="rating" value="<%= num %>" id="star<%= num %>" required>
-                    <label for="star<%= num %>"><span class="material-symbols-outlined">star</span></label>
-                   <% }) %>
-                </div>
-              </div>
-              <div class="mb-3">
-                <textarea name="comment"rows="2" class="form-control rounded-3" placeholder="Tell us about your stay..." required></textarea>
-              </div>
-              <button class="btn btn-air-primary w-100 py-2 fw-bold">Post Review</button>
-            </form>
+        <div class="col-lg-8">
+          <h5 class="fw-bold mb-4">Guest Reviews</h5>
+          <div class="reviews-scroll-container custom-scrollbar pe-2" style="max-height: 600px; overflow-y: auto;">
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+              <% if (listing.reviews && listing.reviews.length > 0) { %>
+                <% listing.reviews.forEach(review => { %>
+                  <div class="col">
+                    <div class="review-card p-3 rounded-4 border h-100 bg-white shadow-sm">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold small text-dark"><%= review.author ? review.author.username : "Guest" %></div>
+                        <div class="d-flex align-items-center">
+                          <span class="material-symbols-outlined fs-6 text-warning me-1">star</span>
+                          <span class="small fw-bold"><%= review.rating %></span>
+                        </div>
+                      </div>
+                      <p class="small text-muted mb-2"><%= review.comment %></p>
+                      <% if (currentUser && (currentUser.role === "admin" || (review.author && currentUser._id.toString() === review.author._id.toString()))) { %>
+                        <form action="/reviews/<%= review._id %>?_method=DELETE" method="POST">
+                          <button class="btn btn-link text-danger p-0 small text-decoration-none">Delete</button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="col-12"><p class="text-muted">No reviews yet. Be the first!</p></div>
+              <% } %>
+            </div>
           </div>
-        <% } %>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div class="text-center mt-5 mb-5">
-    <a href="/" class="text-muted text-decoration-none">
-      <span class="material-symbols-outlined align-middle">arrow_back</span> Back to listings
-    </a>
+
+    <% if (listing.lat && listing.lng) { %>
+      <div class="col-12 mb-5">
+        <h5 class="fw-bold mb-3">Where you'll be</h5>
+        <div id="map" class="rounded-4 shadow-sm border w-100" style="height: 450px;"></div>
+      </div>
+    <% } %>
   </div>
 </div>
 
 <style>
-  /* Base Styles */
+  /* Layout & Buttons */
   .show-container { max-width: 1100px; margin: auto; }
-  
-  /* Buttons */
   .btn-air-primary { background: #ff385c; color: white; border: none; transition: 0.3s; }
   .btn-air-primary:hover { background: #e31c5f; transform: scale(1.02); }
   .btn-air-secondary { background: #f8f9fa; border: 1px solid #ddd; color: #222; }
   .btn-air-danger { background: #fff; border: 1px solid #ff385c; color: #ff385c; }
+  
+  /* Image & Avatar */
+  .show-img { width: 100%; max-height: 500px; object-fit: cover; border-radius: 1.5rem; }
+  .owner-avatar { width: 45px; height: 45px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .premium-badge { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 50px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
 
-  /* Hero Image */
-  .show-img-container { position: relative; overflow: hidden; border-radius: 1.5rem; }
-  .show-img { width: 100%; max-height: 500px; object-fit: cover; }
-  .premium-badge {
-    position: absolute; top: 20px; left: 20px;
-    background: rgba(255,255,255,0.9); padding: 5px 15px;
-    border-radius: 50px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;
-  }
+  /* Amenities */
+  .amenity-item { display: flex; align-items: center; }
+  .amenity-item span { margin-right: 12px; font-size: 24px; color: #484848; }
 
-  /* Owner Avatar */
-  .owner-avatar {
-    width: 50px; height: 50px; background: #222; color: white;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
-  }
+  /* Reservation Card */
+  .reservation-card { box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; border-radius: 1rem; }
+  .reservation-dates label { text-transform: uppercase; font-size: 10px; }
 
-  /* Price Highlight */
-  .price-highlight { background: #f7f7f7; border: 1px solid #eee; }
-
-  /* Map */
-  #map { height: 350px; width: 100%; }
-
-  /* Star Rating Input */
+  /* Star Rating System */
   .star-rating input { display: none; }
-  .star-rating label { color: #ddd; cursor: pointer; transition: 0.2s; }
-  .star-rating label:hover,
-  .star-rating label:hover ~ label,
-  .star-rating input:checked ~ label { color: #ff385c; font-variation-settings: 'FILL' 1; }
+  .star-rating label { color: #ddd; cursor: pointer; transition: 0.2s; font-size: 28px; }
+  .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { 
+    color: #ff385c; font-variation-settings: 'FILL' 1; 
+  }
 
   /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #d3d3d3; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ff385c; }
+
+  /* Map Fix */
+  #map { width: 100% !important; height: 450px; z-index: 1; display: block; }
 
   @media (max-width: 991px) {
-    .review-section { position: static; margin-top: 2rem; }
+    .reservation-card { position: static !important; margin-top: 2rem; }
+    .reviews-scroll-container { max-height: 400px !important; }
   }
 </style>
 
-<% if (listing.lat && listing.lng) { %>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  const map = L.map('map', { scrollWheelZoom: false }).setView([<%= listing.lat %>, <%= listing.lng %>], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  const icon = L.divIcon({
-    className: 'custom-div-icon',
-    html: "<div style='background-color:#ff385c; width:20px; height:20px; border-radius:50%; border:2px solid white;'></div>",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  document.addEventListener('DOMContentLoaded', function() {
+    <% if (listing.lat && listing.lng) { %>
+      const map = L.map('map', { scrollWheelZoom: true }).setView([<%= listing.lat %>, <%= listing.lng %>], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      const icon = L.divIcon({
+        className: 'custom-marker',
+        html: "<div style='background-color:#ff385c; width:22px; height:22px; border-radius:50%; border:3px solid white; box-shadow:0 0 5px rgba(0,0,0,0.3)'></div>",
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+
+      L.marker([<%= listing.lat %>, <%= listing.lng %>], { icon: icon }).addTo(map);
+      
+      // Ensures the map tiles load correctly in the full-width container
+      setTimeout(() => { map.invalidateSize(); }, 400);
+    <% } %>
   });
-  L.marker([<%= listing.lat %>, <%= listing.lng %>], { icon: icon }).addTo(map);
 </script>
-<% } %>
