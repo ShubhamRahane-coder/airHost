@@ -277,6 +277,10 @@ app.get("/help", (req, res) => {
     res.render("listings/help", { title: "Help Centre | airHost" });
 });
 
+// Route to display the Host Guidance Page
+app.get("/host/guidance", (req, res) => {
+    res.render("listings/guidance.ejs");
+});
 
 
 // ================= ERROR HANDLING =================
