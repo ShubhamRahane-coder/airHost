@@ -7,423 +7,373 @@
     <a class="navbar-brand d-flex align-items-center text-danger fs-2" href="/" style="font-weight: 600;">
       <span class="material-symbols-outlined me-1 fs-1">assistant_navigation</span> airHost
     </a>
- <form action="/listings/find" method="post">
-    <div class="center-search mx-auto d-none d-lg-flex" style="flex:1; justify-content:center;">
-      <div class="d-flex align-items-center border rounded-pill px-3 bg-white justify-content-between position-relative"
-           style="height:60px; width:100%; max-width:600px;">
-           
+
+    <form action="/listings/find" method="post" class="d-none d-lg-flex flex-grow-1 justify-content-center">
+      <div class="center-search d-flex align-items-center border rounded-pill px-3 bg-white justify-content-between position-relative shadow-sm" style="height:60px; width:100%; max-width:600px;">
         <div class="px-3">
-          <div class="fw-medium">Where</div>
+          <div class="fw-medium" id="whereBtn">Where</div>
           <input type="text" name="location" class="border-0 w-100" placeholder="Search destinations" style="outline: none;">
         </div>
         <div class="vr"></div>
-
         <div class="px-4 position-relative">
           <div class="fw-medium clickable" id="whenBtn">When<br><small class="second_text_nav_small">Add dates</small></div>
-          <!-- <div class="text-muted small">Add dates</div> -->
-
-          <div class="date-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" 
-               style="top: 70px; left: 50%; transform: translateX(-50%); z-index: 2000; border-radius: 24px; width: 400px;">
+          <div class="date-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" style="top: 70px; left: 50%; transform: translateX(-50%); z-index: 2000; border-radius: 24px; width: 400px;">
             <label class="fw-bold mb-2">Check-in / Check-out</label>
             <div class="d-flex gap-2">
-               <input type="date" name="startDate" class="form-control mb-2 border-0 bg-light rounded-pill">
-               <input type="date" name="endDate" class="form-control mb-2 border-0 bg-light rounded-pill">
+              <input type="date" name="startDate" class="form-control mb-2 border-0 bg-light rounded-pill">
+              <input type="date" name="endDate" class="form-control mb-2 border-0 bg-light rounded-pill">
             </div>
           </div>
         </div>
         <div class="vr"></div>
-
         <div class="d-flex align-items-center gap-4 position-relative">
           <div class="clickable px-4" id="whoBtn">
             <div class="fw-medium">Who <br><small class="second_text_nav_small">Add guests</small></div>
-            <!-- <div class="text-muted small">Add guests</div> -->
           </div>
+          <div class="guest-picker card shadow-lg p-4 position-absolute bg-white border-0 d-none" style="top: 70px; right: 0; z-index: 2000; border-radius: 24px; width: 320px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <div class="fw-bold">Adults</div>
+      <div class="small text-muted">Ages 13+</div>
+    </div>
+    <div class="d-flex align-items-center bg-light rounded-3 px-2">
+      <input id="guest_adults" name="adults" type="number" class="form-control border-0 bg-transparent text-center p-0 shadow-none" min="1" value="1" style="width: 40px; font-weight: 500;">
+      <div class="d-flex flex-column ms-1" style="line-height: 0.8;">
+        <span class="material-symbols-outlined clickable" onclick="updateGuestCount('guest_adults', 1)" style="font-size: 18px; cursor: pointer;">keyboard_arrow_up</span>
+        <span class="material-symbols-outlined clickable" onclick="updateGuestCount('guest_adults', -1)" style="font-size: 18px; cursor: pointer;">keyboard_arrow_down</span>
+      </div>
+    </div>
+  </div>
 
-          <div class="guest-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" 
-               style="top: 70px; right: 0; z-index: 2000; border-radius: 24px; width: 320px;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-               <div><div class="fw-bold">Adults</div><div class="small text-muted">Ages 13+</div></div>
-               <input name="adults" type="number" class="form-control w-25 border-0 bg-light" min="1" value="1">
-            </div>
-            <div class="d-flex justify-content-between align-items-center">
-               <div><div class="fw-bold">Children</div><div class="small text-muted">Ages 2-12</div></div>
-               <input name="children" type="number" class="form-control w-25 border-0 bg-light" min="0" value="0">
-            </div>
-          </div>
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <div class="fw-bold">Children</div>
+      <div class="small text-muted">Ages 2-12</div>
+    </div>
+    <div class="d-flex align-items-center bg-light rounded-3 px-2">
+      <input id="guest_children" name="children" type="number" class="form-control border-0 bg-transparent text-center p-0 shadow-none" min="0" value="0" style="width: 40px; font-weight: 500;">
+      <div class="d-flex flex-column ms-1" style="line-height: 0.8;">
+        <span class="material-symbols-outlined clickable" onclick="updateGuestCount('guest_children', 1)" style="font-size: 18px; cursor: pointer;">keyboard_arrow_up</span>
+        <span class="material-symbols-outlined clickable" onclick="updateGuestCount('guest_children', -1)" style="font-size: 18px; cursor: pointer;">keyboard_arrow_down</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-          <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center ml-4" style="width:40px;height:40px;">
+
+
+
+          <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
             <span class="material-symbols-outlined text-white">search</span>
           </button>
         </div>
       </div>
-    </div>
-</form>
-<ul class="navbar-nav d-flex align-items-center gap-2 flex-row">
-  <li class="nav-item">
-    <a class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold" href="/listings/new">Become a Host</a>
-  </li>
-  
-  <li class="nav-item position-relative">
-    <button class="btn rounded-pill nav_btn_account d-flex align-items-center gap-2 shadow-sm" id="accountBtn">
-      <span class="material-symbols-outlined menu-icon">menu</span>
-      <span class="material-symbols-outlined account-icon" style="color: #000 !important;">account_circle</span>
-    </button>
+    </form>
 
-    <div class="account-dropdown card shadow-lg border-0 p-4 position-absolute d-none" id="accountDropdown">
-      
-      <% if (!currentUser) { %>
-        <div class="d-flex align-items-center mb-3 px-1">
-          <span class="material-symbols-outlined welcome-icon me-3" style="color: #000 !important;">account_circle</span>
-          <div class="d-flex flex-column">
-            <span class="fw-bold fs-5 text-dark">Welcome</span>
-            <span class="text-muted small">Guest User</span>
+    <ul class="navbar-nav d-flex align-items-center gap-2 flex-row">
+      <li class="nav-item">
+        <a class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold" href="/listings/new">Become a Host</a>
+      </li>
+      <li class="nav-item position-relative">
+        <button class="btn rounded-pill nav_btn_account d-flex align-items-center gap-2 shadow-sm" id="accountBtn">
+          <span class="material-symbols-outlined menu-icon">menu</span>
+          <span class="material-symbols-outlined account-icon" style="color: #000 !important; display: inline-block !important;">account_circle</span>
+        </button>
+        <div class="account-dropdown card shadow-lg border-0 p-4 position-absolute d-none" id="accountDropdown">
+          <% if (!currentUser) { %>
+          <div class="d-flex align-items-center mb-3 px-1">
+            <span class="material-symbols-outlined welcome-icon me-3" style="color: #000 !important; display: inline-block !important;">account_circle</span>
+            <div class="d-flex flex-column">
+              <span class="fw-bold fs-5 text-dark">Welcome</span>
+              <span class="text-muted small">Guest User</span>
+            </div>
           </div>
-        </div>
-        <hr class="dropdown-divider">
-        <div class="py-2">
+          <hr class="dropdown-divider">
+          <div class="py-2">
             <a href="/login" class="btn btn-air-outline w-100 mb-2 py-2 fw-bold">Login</a>
             <a href="/register" class="btn btn-air-primary w-100 mb-3 py-2 fw-bold">Sign Up</a>
-        </div>
-        
-        <a href="/help" class="dropdown-link">
-          <span class="material-symbols-outlined me-3 fs-4 text-dark">support_agent</span>
-          <span class="fw-medium">Help Centre</span>
-        </a>
-        
-      <% } else { %>
-        <div class="d-flex align-items-center mb-3 px-1">
-          <div class="nav-avatar-circle me-3">
-            <%= currentUser.username.charAt(0).toUpperCase() %>
           </div>
-          <div class="d-flex flex-column overflow-hidden">
-            <span class="fw-bold fs-5 text-dark text-truncate"><%= currentUser.username %></span>
-            <span class="text-muted small">Verified Host</span>
+          <% } else { %>
+          <div class="d-flex align-items-center mb-3 px-1">
+            <div class="nav-avatar-circle me-3">
+              <%= currentUser.username.charAt(0).toUpperCase() %>
+            </div>
+            <div class="d-flex flex-column overflow-hidden">
+              <span class="fw-bold fs-5 text-dark text-truncate"><%= currentUser.username %></span>
+              <span class="text-muted small">Verified Host</span>
+            </div>
           </div>
+          <hr class="dropdown-divider">
+          <div class="py-2">
+            <a href="/profile" class="dropdown-link"><span class="material-symbols-outlined me-3">person</span>My Profile</a>
+          </div>
+          <% } %>
+          <a href="/help" class="dropdown-link"><span class="material-symbols-outlined me-3">support_agent</span>Help Centre</a>
+          <% if (currentUser) { %>
+          <hr class="dropdown-divider">
+          <a href="/logout" class="btn btn-air-danger w-100 py-2">Logout</a>
+          <% } %>
         </div>
-        <hr class="dropdown-divider">
-        <div class="py-2">
-            <a href="/profile" class="dropdown-link">
-              <span class="material-symbols-outlined me-3 fs-4 text-dark">person</span>
-              <span class="fw-medium">My Profile</span>
-            </a>
-            <a href="/help" class="dropdown-link">
-              <span class="material-symbols-outlined me-3 fs-4 text-dark">support_agent</span>
-              <span class="fw-medium">Help Centre</span>
-            </a>
-        </div>
-        <hr class="dropdown-divider">
-        <div class="pt-2">
-            <a href="/logout" class="btn btn-air-danger w-100 py-2 fw-bold">Logout</a>
-        </div>
-      <% } %>
-
-    </div>
-  </li>
-
-  <li class="nav-item d-lg-none">
-    <button class="btn rounded-circle nav_btn_third" id="mobileMenuBtn">
-      <span class="material-symbols-outlined">menu_open</span>
-    </button>
-  </li>
-</ul>
-
-<style>
-  /* 1. Account Button Styling */
-  .nav_btn_account {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 6px 10px 6px 14px !important;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-  }
-  .nav_btn_account:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
-    border-color: #222;
-  }
-  .nav_btn_account .menu-icon { font-size: 20px; color: #222; }
-  .nav_btn_account .account-icon { font-size: 34px; }
-
-  /* 2. Dropdown Container */
-  .account-dropdown {
-    width: 300px;
-    top: 4.5rem;
-    right: 0;
-    z-index: 1000;
-    border-radius: 1.25rem !important;
-    border: 1px solid rgba(0,0,0,0.05) !important;
-    animation: dropdownShow 0.25s cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  @keyframes dropdownShow {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  /* 3. Typography & Links */
-  .welcome-icon { font-size: 52px !important; }
-  
-  .dropdown-link {
-    display: flex;
-    align-items: center;
-    padding: 12px 14px;
-    text-decoration: none;
-    color: #222;
-    font-size: 1rem;
-    border-radius: 10px;
-    transition: all 0.2s;
-    margin-bottom: 2px;
-  }
-  .dropdown-link:hover {
-    background: #f7f7f7;
-    color: #000;
-    transform: translateX(4px);
-  }
-
-  /* 4. Action Buttons */
-  .btn-air-primary {
-    background-color: #ff385c;
-    color: white;
-    border: none;
-    font-size: 1rem;
-    border-radius: 10px;
-    transition: 0.3s;
-  }
-  .btn-air-primary:hover { background-color: #000; color: white; }
-
-  .btn-air-outline {
-    border: 1px solid #000;
-    color: #000;
-    font-size: 1rem;
-    border-radius: 10px;
-    transition: 0.2s;
-  }
-  .btn-air-outline:hover { background-color: #000; color: #fff; }
-
-  .btn-air-danger {
-    background-color: #fff;
-    border: 1px solid #000;
-    color: #000;
-    font-size: 1rem;
-    border-radius: 10px;
-    transition: 0.2s;
-  }
-  .btn-air-danger:hover { background-color: #ff385c; border-color: #ff385c; color: #fff; }
-
-  /* 5. User Avatar (Deep Black) */
-  .nav-avatar-circle {
-    width: 48px;
-    height: 48px;
-    background: rgb(219, 55, 69);
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  }
-
-  .dropdown-divider { 
-    border-top: 1px solid #ebebeb; 
-    margin: 1rem -1.5rem;
-  }
-</style>
+      </li>
+      <li class="nav-item d-lg-none">
+        <button class="btn rounded-circle nav_btn_third" id="mobileMenuBtn">
+          <span class="material-symbols-outlined">menu_open</span>
+        </button>
+      </li>
+    </ul>
   </div>
 </nav>
 
 <div class="mobile-search-overlay bg-light border-bottom d-none" id="mobileMenu">
   <form action="/listings/find" method="post">
-  <div class="mobile-search-box d-flex justify-content-center px-3">
-    <div class="d-flex align-items-center border rounded-pill px-3 bg-white justify-content-between position-relative shadow"
-         style="height:66px; width:100%; max-width:600px;">
-
+    <div class="mobile-search-box d-flex justify-content-center px-3">
+      <div class="d-flex align-items-center border rounded-pill px-3 bg-white justify-content-between position-relative shadow" style="height:66px; width:100%; max-width:600px;">
         <div class="px-3">
           <div class="fw-medium">Where</div>
           <input type="text" name="location" class="border-0 w-100" placeholder="Destinations" style="outline: none; font-size: 14px;">
         </div>
         <div class="vr"></div>
-
         <div class="px-3 position-relative">
           <div class="fw-medium clickable" id="mobileWhenBtn">When <br><small class="second_text_nav_small">add dates</small></div>
-          <div class="date-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" 
-               style="top: 75px; left: 50%; transform: translateX(-50%); width: 320px; z-index: 2000; border-radius: 24px;">
-             <label class="fw-bold mb-2">Dates</label>
-             <div class="d-flex flex-column gap-2">
-                <input type="date" name="startDate" class="form-control border-0 bg-light rounded-pill">
-                <input type="date" name="endDate" class="form-control border-0 bg-light rounded-pill">
-             </div>
+          <div class="date-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" style="top: 75px; left: 50%; transform: translateX(-50%); width: 320px; z-index: 2000; border-radius: 24px;">
+            <label class="fw-bold mb-2">Dates</label>
+            <div class="d-flex flex-column gap-2">
+              <input type="date" name="startDate" class="form-control border-0 bg-light rounded-pill">
+              <input type="date" name="endDate" class="form-control border-0 bg-light rounded-pill">
+            </div>
           </div>
         </div>
         <div class="vr"></div>
-
         <div class="d-flex align-items-center gap-2 position-relative" style="flex: 0.5; justify-content: space-between;">
-          <div class="clickable" id="mobileWhoBtn"><div class="fw-medium">Who<br><small class="second_text_nav_small">add guests</small></div></div>
-          <div class="guest-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" 
-               style="top: 75px; right: 0; width: 280px; z-index: 2000; border-radius: 24px;">
-             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="fw-bold small">Adults</div>
-                <input type="number" class="form-control w-25 border-0 bg-light" name="adults" min="1" value="1">
-             </div>
-             <div class="d-flex justify-content-between align-items-center">
-                <div class="fw-bold small">Children</div>
-                <input type="number" class="form-control w-25 border-0 bg-light" name="children" min="0" value="0">
-             </div>
-          </div>
+          <div class="clickable" id="mobileWhoBtn">
+  <div class="fw-medium">Who<br><small class="second_text_nav_small">add guests</small></div>
+</div>
+
+<div class="guest-picker card shadow-lg p-4 d-none position-absolute bg-white border-0" style="top: 75px; right: 0; width: 280px; z-index: 2000; border-radius: 24px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="fw-bold small">Adults</div>
+    <div class="d-flex align-items-center bg-light rounded-3 px-2">
+      <input type="number" id="mobile_adults" name="adults" 
+             class="form-control border-0 bg-transparent text-center p-0 shadow-none" 
+             min="1" value="1" style="width: 35px; font-size: 14px; font-weight: 500;">
+      <div class="d-flex flex-column ms-1" style="line-height: 0.7;">
+        <span class="material-symbols-outlined clickable" onclick="stepMobile('mobile_adults', 1)" style="font-size: 16px; cursor: pointer;">keyboard_arrow_up</span>
+        <span class="material-symbols-outlined clickable" onclick="stepMobile('mobile_adults', -1)" style="font-size: 16px; cursor: pointer;">keyboard_arrow_down</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="fw-bold small">Children</div>
+    <div class="d-flex align-items-center bg-light rounded-3 px-2">
+      <input type="number" id="mobile_children" name="children" 
+             class="form-control border-0 bg-transparent text-center p-0 shadow-none" 
+             min="0" value="0" style="width: 35px; font-size: 14px; font-weight: 500;">
+      <div class="d-flex flex-column ms-1" style="line-height: 0.7;">
+        <span class="material-symbols-outlined clickable" onclick="stepMobile('mobile_children', 1)" style="font-size: 16px; cursor: pointer;">keyboard_arrow_up</span>
+        <span class="material-symbols-outlined clickable" onclick="stepMobile('mobile_children', -1)" style="font-size: 16px; cursor: pointer;">keyboard_arrow_down</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 
           <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center ml-4" style="width:40px;height:40px;">
             <span class="material-symbols-outlined text-white" style="font-size: 20px;">search</span>
           </button>
         </div>
+      </div>
     </div>
-  </div>
-</form>
+  </form>
 </div>
 
 <style>
-  .nav_btn_third { height: 45px; width: 45px; border: 1px solid #ddd; background: white; }
-  .account-dropdown { position: absolute; top: 60px; right: 0; min-width: 200px; z-index: 2000; border-radius: 12px; }
+  .nav_btn_account { background: white; border: 1px solid #ddd; padding: 6px 10px 6px 14px !important; }
+  .account-dropdown { width: 300px; top: 4.5rem; right: 0; z-index: 1000; border-radius: 1.25rem !important; }
+  .welcome-icon { font-size: 52px !important; display: inline-block !important; }
   .mobile-search-overlay { position: fixed; top: 100px; left: 0; right: 0; z-index: 1500; background: #f8f9fa; padding: 20px 0; height: auto; }
   .clickable { cursor: pointer; }
+  .vr { width: 1px; background-color: #ddd; height: 30px; align-self: center; }
+  .nav-host-pill:hover { background-color: #f1f1f1 !important; color: #000 !important; }
+  .btn-air-primary { background-color: #ff385c; color: white; border-radius: 10px; border: none; }
+  .btn-air-outline { border: 1px solid #000; color: #000; border-radius: 10px; background: white; }
+  .nav-avatar-circle { width: 48px; height: 48px; background: #db3745; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .dropdown-link { display: flex; align-items: center; padding: 12px; text-decoration: none; color: #222; }
+  .dropdown-link:hover { background: #f7f7f7; border-radius: 10px; }
+  .second_text_nav_small{    color: #757575;}
   .vr {
-    display: inline-block;
-    align-self: stretch;
-    width: var(--bs-border-width);
-    min-height: 2em;
-    background-color: currentcolor;
-    opacity: .25;
-    margin: auto 0;
+    width: 1px;
+    background-color: #1c1b1b;
+    height: 32px;
+    align-self: center;
+}
+#mobileWhenBtn,#mobileWhoBtn{color: #212529; font-weight: 500 !important; font-size: 1rem !important;}
+#whereBtn ,#whenBtn, #whoBtn {
+  color: #212529;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+
+  /* Hide standard browser arrows for a cleaner look */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
-  .card { border-radius: 24px; }
-  .second_text_nav_small{
-    font-size: 14px;
-    color: #6c757d;
-  }/* Custom styling for the host link */
-.nav-host-pill {
-  transition: background-color 0.2s ease-in-out;
-  font-size: 15px;
-  font-weight: 500;
-}
 
-.nav-host-pill:hover {
-  background-color: #f1f1f1 !important; /* Soft gray hover */
-  color: #000 !important;
-}
-.nav_btn_third {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 45px;
-    width: 45px;
-    border: 2px solid #000000;
-    background: white;
-    color: #222; /* Standard dark gray/black */
-    transition: all 0.2s ease-in-out; /* Smooth hover fade */
-    cursor: pointer;
-}
+  .clickable:hover {
+    color: #ff385c;
+  }
 
-.nav_btn_third:hover {
-    background-color: #f1f1f1 !important; /* Soft gray hover */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow for depth */
-}
+  /* Prevent background color change on input focus */
+  .form-control:focus {
+    background-color: transparent !important;
+  }
 
-/* Optional: Make the icon a bit bigger to match the button size */
-.nav_btn_third .material-symbols-outlined {
-    font-size: 33px;
-}
+  /* Hide standard browser number arrows */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .clickable:hover {
+    color: #ff385c;
+  }
   
+  /* Ensure the input doesn't turn blue on focus */
+  .form-control:focus {
+    background-color: transparent !important;
+  }
 </style>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const mainNav = document.getElementById("mainNav");
-  const mobileMenu = document.getElementById("mobileMenu");
+  const accountBtn = document.getElementById("accountBtn");
   const accountDropdown = document.getElementById("accountDropdown");
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const mainNav = document.getElementById("mainNav");
 
-  let mobileMenuTimer = null;
-  let mobileMenuInteracted = false;
-
-  const hideAll = () => {
-    document.querySelectorAll(
-      '.date-picker, .guest-picker, #accountDropdown, #mobileMenu'
-    ).forEach(el => el.classList.add('d-none'));
-
-    mainNav.classList.add("border-bottom");
-
-    if (mobileMenuTimer) {
-      clearTimeout(mobileMenuTimer);
-      mobileMenuTimer = null;
-    }
-
-    mobileMenuInteracted = false;
+  // Helper to hide only date/guest pickers
+  const hidePickers = () => {
+    document.querySelectorAll('.date-picker, .guest-picker').forEach(el => el.classList.add('d-none'));
   };
 
   /* ACCOUNT DROPDOWN */
-  document.getElementById("accountBtn").addEventListener("click", e => {
+  accountBtn.addEventListener("click", e => {
     e.stopPropagation();
-    const isHidden = accountDropdown.classList.contains("d-none");
-    hideAll();
-    if (isHidden) accountDropdown.classList.remove("d-none");
+    hidePickers();
+    
+    // HIDE Search Menu if opening Account
+    mobileMenu.classList.add("d-none");
+    mainNav.classList.add("border-bottom");
+    
+    accountDropdown.classList.toggle("d-none");
   });
 
-  /* MOBILE MENU — auto close after 10s if no interaction */
-  document.getElementById("mobileMenuBtn").addEventListener("click", e => {
+  /* MOBILE SEARCH MENU TOGGLE */
+  mobileMenuBtn.addEventListener("click", e => {
     e.stopPropagation();
+    
+    // HIDE Account Dropdown if opening Search
+    accountDropdown.classList.add("d-none");
+    
     const isHidden = mobileMenu.classList.contains("d-none");
-
-    hideAll();
-
     if (isHidden) {
       mobileMenu.classList.remove("d-none");
       mainNav.classList.remove("border-bottom");
-
-      mobileMenuInteracted = false;
-
-      mobileMenuTimer = setTimeout(() => {
-        if (!mobileMenuInteracted) {
-          mobileMenu.classList.add("d-none");
-          mainNav.classList.add("border-bottom");
-        }
-      }, 10000);
+    } else {
+      mobileMenu.classList.add("d-none");
+      mainNav.classList.add("border-bottom");
     }
   });
 
-  /* Detect interaction inside mobile menu */
-  mobileMenu.addEventListener("click", () => {
-    mobileMenuInteracted = true;
-    if (mobileMenuTimer) {
-      clearTimeout(mobileMenuTimer);
-      mobileMenuTimer = null;
-    }
-  });
-
-  /* DATE & GUEST PICKERS */
-  const setupPopup = (btnId, popupSelector) => {
+  /* PICKERS LOGIC (Desktop & Mobile) */
+  const setupPicker = (btnId, pickerSelector) => {
     const btn = document.getElementById(btnId);
     if (!btn) return;
-
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      const popup = btn.parentElement.querySelector(popupSelector);
-      const isHidden = popup.classList.contains("d-none");
-      hideAll();
-      if (isHidden) popup.classList.remove("d-none");
+      
+      // HIDE Account Dropdown if any search picker is opened
+      accountDropdown.classList.add("d-none");
+      
+      const picker = btn.parentElement.querySelector(pickerSelector);
+      const isHidden = picker.classList.contains("d-none");
+      hidePickers(); 
+      if (isHidden) picker.classList.remove("d-none");
     });
   };
 
-  setupPopup("whenBtn", ".date-picker");
-  setupPopup("whoBtn", ".guest-picker");
-  setupPopup("mobileWhenBtn", ".date-picker");
-  setupPopup("mobileWhoBtn", ".guest-picker");
+  setupPicker("whenBtn", ".date-picker");
+  setupPicker("whoBtn", ".guest-picker");
+  setupPicker("mobileWhenBtn", ".date-picker");
+  setupPicker("mobileWhoBtn", ".guest-picker");
 
-  /* CLICK OUTSIDE CLOSES EVERYTHING */
+  /* GLOBAL CLICK OUTSIDE */
   document.addEventListener("click", e => {
-    if (
-      !e.target.closest('.card') &&
-      !e.target.closest('#mobileMenu') &&
-      !e.target.closest('#accountBtn') &&
-      !e.target.closest('#mobileMenuBtn')
-    ) {
-      hideAll();
+    if (!e.target.closest('.card') && 
+        !e.target.closest('#mobileMenu') && 
+        !e.target.closest('#accountBtn') && 
+        !e.target.closest('#mobileMenuBtn')) {
+      
+      accountDropdown.classList.add("d-none");
+      mobileMenu.classList.add("d-none");
+      mainNav.classList.add("border-bottom");
+      hidePickers();
     }
+  });
+});
+
+/* COUNTER FUNCTIONS */
+function updateGuestCount(id, delta) {
+  const input = document.getElementById(id);
+  const currentValue = parseInt(input.value) || 0;
+  const min = parseInt(input.getAttribute('min'));
+  const newValue = currentValue + delta;
+  if (newValue >= min) {
+    input.value = newValue;
+  }
+}
+
+function stepMobile(id, delta) {
+  const input = document.getElementById(id);
+  const val = parseInt(input.value) || 0;
+  const min = parseInt(input.min);
+  const newVal = val + delta;
+  if (newVal >= min) {
+    input.value = newVal;
+  }
+}
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  // ... your existing code ...
+
+  /* PREVENT EMPTY SEARCH */
+  const searchForms = document.querySelectorAll('form[action="/listings/find"]');
+  
+  searchForms.forEach(form => {
+    form.addEventListener("submit", function (e) {
+      const locationInput = this.querySelector('input[name="location"]');
+      
+      // If location is empty or only contains spaces
+      if (!locationInput.value.trim()) {
+        e.preventDefault(); // Stop the form from searching
+        locationInput.focus();
+        locationInput.style.borderBottom = "2px solid #ff385c"; // Optional: Highlight error
+        
+        // Remove error highlight after 2 seconds
+        setTimeout(() => {
+          locationInput.style.borderBottom = "none";
+        }, 2000);
+      }
+    });
   });
 });
 </script>
