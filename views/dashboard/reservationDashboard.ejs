@@ -48,6 +48,7 @@
                                 <tr class="extra-small">
                                     <th class="ps-4 py-3">Guest Info & Occupancy</th>
                                     <th>Stay Window</th>
+                                    <th>Booked At</th> 
                                     <th>Verification</th>
                                     <th>Financials</th>
                                     <th>Status</th>
@@ -77,6 +78,18 @@
                                             <td>
                                                 <div class="fw-semibold small"><%= resv.checkIn.toDateString() %></div>
                                                 <div class="text-muted x-small">to <%= resv.checkOut.toDateString() %></div>
+                                            </td>
+                                            <td>
+                                                <% if (resv.createdAt) { %>
+                                                    <div class="fw-bold small text-dark">
+                                                        <%= resv.createdAt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) %>
+                                                    </div>
+                                                    <div class="text-muted x-small">
+                                                        <%= resv.createdAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
+                                                    </div>
+                                                <% } else { %>
+                                                     <div class="text-muted x-small">No record</div>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <div class="status-indicator <%= resv.isVerified ? 'success' : 'warning' %>">
@@ -118,6 +131,10 @@
                                                     </div>
                                                     <form action="/dashboard/reservations/<%= resv._id %>?_method=PUT" method="POST">
                                                         <div class="modal-body py-0">
+                                                            <div class="mb-3 p-2 bg-light rounded-3 border-start border-3 border-dark">
+                                                            <p class="mb-0 x-small text-muted text-uppercase fw-bold">Transaction Recorded</p>
+                                                            <p class="mb-0 small fw-semibold"><%= resv.createdAt ? resv.createdAt.toLocaleString('en-IN') : 'N/A' %></p>
+                                                        </div>
                                                             <div class="mb-3">
                                                                 <label class="form-label small fw-bold">Booking Status</label>
                                                                 <select class="form-select" name="reservation[status]">

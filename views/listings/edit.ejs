@@ -1,88 +1,170 @@
-<% layout("layouts/boilerplate") %>
+<% layout('layouts/boilerplate') %>
 
-<div class="edit-listing-wrapper py-5">
-  <div class="container" style="max-width:700px;">
+<% 
+  const categoryMapper = {
+    "Rooms": { icon: "fa-bed", label: "Private Room" },
+    "Hotels": { icon: "fa-hotel", label: "Boutique Hotel" },
+    "Entire Home": { icon: "fa-house-user", label: "Entire Home" },
+    "Cabins": { icon: "fa-cabin-house", label: "Cabin" },
+    "Luxe": { icon: "fa-gem", label: "Luxe Stay" },
+  
+  };
+  const categoryData = categoryMapper[listing.category] || { icon: "fa-house", label: "Listing" };
+%>
+
+<div class="listing-form-wrapper py-5">
+  <div class="container" style="max-width: 850px;">
     
-    <div class="mb-4 d-flex align-items-center gap-3">
-      <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
-      <h2 class="fw-bold mb-0">Edit Listing</h2>
+    <div class="mb-5 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:45px; height:45px;">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <div>
+          <h2 class="fw-bold mb-0">Edit Your Space</h2>
+          <p class="text-muted small mb-0">Property ID: #<%= listing._id.toString().slice(-6).toUpperCase() %></p>
+        </div>
+      </div>
+      <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
+        <i class="fa-solid fa-pen-to-square text-primary me-1"></i> Edit Mode
+      </span>
     </div>
 
-    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4 bg-white">
+    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
       <form action="/listings/<%= listing._id %>?_method=PUT" method="POST"
-            class="d-flex flex-column gap-4 needs-validation"
-            novalidate>
+            class="d-flex flex-column gap-5 needs-validation" novalidate>
 
-        <div>
-          <label for="title" class="form-label fw-bold air-label">Property Title</label>
-          <input id="title" name="listing[title]" type="text"
-                 class="form-control air-input" value="<%= listing.title %>" required 
-                 placeholder="e.g. Modern Villa with Pool">
-          <div class="invalid-feedback">Title is required</div>
-        </div>
+       <section>
+  <h6 class="section-title">1. Property Identity</h6>
+  <div class="row g-3">
+    <div class="col-md-8">
+      <label for="title" class="form-label air-label">Property Title</label>
+      <input id="title" name="listing[title]" type="text" class="form-control air-input" 
+             value="<%= listing.title %>" placeholder="e.g. Modern Loft in the City Center" required>
+      <div class="invalid-feedback">Please provide a catchy title.</div>
+    </div>
+    <div class="col-md-4">
+      <label for="category" class="form-label air-label">Listing Type</label>
+      <select name="listing[category]" id="category" class="form-select air-input" required onchange="updateCategoryHint()">
+        <option value="" disabled>Choose a type...</option>
+        
+        <optgroup label="Stay Styles">
+          <option value="Rooms" <%= listing.category === 'Rooms' ? 'selected' : '' %>>🛏️ Private Rooms</option>
+          <option value="Hotels" <%= listing.category === 'Hotels' ? 'selected' : '' %>>🏨 Boutique Hotels</option>
+          <option value="Entire Home" <%= listing.category === 'Entire Home' ? 'selected' : '' %>>🏠 Entire Home</option>
+        </optgroup>
+        
+        <optgroup label="Nature & Unique">
+          <option value="Cabins" <%= listing.category === 'Cabins' ? 'selected' : '' %>>🏡 Cabins</option>
+          <option value="Luxe" <%= listing.category === 'Luxe' ? 'selected' : '' %>>✨ Luxe</option>
+        </optgroup>
+      </select>
+      <div id="category-hint" class="mt-2 p-2 rounded-3 bg-light border-start border-4 border-dark" style="font-size: 0.75rem; color: #555;">
+        Select a type to see its definition.
+      </div>
+    </div>
+  </div>
+</section>
 
-        <div>
-          <label for="price" class="form-label fw-bold air-label">Price per night</label>
-          <div class="input-group">
-           <span class="input-group-text bg-white border rounded air-input">₹</span>
-            <input id="price" name="listing[price]" type="number" class="form-control air-input mx-1" value="1232" required="" placeholder="0.00" >
+        <section>
+          <h6 class="section-title">2. Pricing & Capacity</h6>
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label for="price" class="form-label air-label">Nightly Rate</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
+                <input id="price" name="listing[price]" type="number" class="form-control air-input border-start-0" 
+                       value="<%= listing.price %>" placeholder="0" required min="100">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="cleaningFee" class="form-label air-label">Cleaning Fee</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
+                <input id="cleaningFee" name="listing[cleaningFee]" type="number" class="form-control air-input border-start-0" 
+                       value="<%= listing.cleaningFee || 0 %>">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="serviceFeePct" class="form-label air-label">Service Fee Percentage</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">%</span>
+                <input id="serviceFeePct" name="listing[serviceFeePct]" type="number" class="form-control air-input border-start-0" 
+                       value="<%= listing.serviceFeePct || 3 %>" min="0" max="100">
+              </div>
+
+  <small class="text-muted" style="font-size: 0.7rem;">Calculated automatically based on Nightly Rate</small>
+
+            </div>
+            <div class="col-md-4">
+              <label for="guests" class="form-label air-label">Max Guests</label>
+              <input id="guests" name="listing[guests]" type="number" class="form-control air-input" 
+                     value="<%= listing.guests || 1 %>" required min="1">
+            </div>
           </div>
-          <div class="invalid-feedback">Price is required</div>
-        </div>
+        </section>
 
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label for="location" class="form-label fw-bold air-label">Location</label>
-            <input id="location" name="listing[location]" type="text"
-                   class="form-control air-input" value="<%= listing.location %>" required placeholder="City, State">
-            <div class="invalid-feedback">Location is required</div>
+        <section>
+          <h6 class="section-title">3. Media & Story</h6>
+          <div class="mb-4">
+            <label for="image" class="form-label air-label">Cover Image URL</label>
+            <input id="image" name="listing[image][url]" type="text" class="form-control air-input" 
+                   value="<%= listing.image.url %>" placeholder="Paste high-quality image URL..." required>
+            
+            <div id="image-preview-container" class="mt-3 rounded-4 overflow-hidden border position-relative" style="height: 250px;">
+                <img id="image-preview" src="<%= listing.image.url %>" class="w-100 h-100 object-fit-cover" alt="Preview">
+                <div class="position-absolute bottom-0 start-0 w-100 p-2 bg-dark bg-opacity-50 text-white small text-center">Live Preview</div>
+            </div>
           </div>
-
-          <div class="col-md-4">
-            <label for="country" class="form-label fw-bold air-label">Country</label>
-            <input id="country" name="listing[country]" type="text"
-                   class="form-control air-input" value="<%= listing.country %>" required placeholder="India">
-            <div class="invalid-feedback">Country is required</div>
+          <div>
+            <label for="description" class="form-label air-label">About the space</label>
+            <textarea id="description" name="listing[description]" class="form-control air-input" 
+                      style="min-height:150px;" required placeholder="Share what makes your place special..."><%= listing.description %></textarea>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <label for="image" class="form-label fw-bold air-label">Image URL</label>
-          <input id="image" name="listing[image][url]" type="text"
-                 class="form-control air-input" value="<%= listing.image.url %>" required placeholder="https://...">
-          <div class="invalid-feedback">Image URL is required</div>
-        </div>
-
-        <div>
-          <label for="description" class="form-label fw-bold air-label">Description</label>
-          <textarea id="description" name="listing[description]"
-                    class="form-control air-input"
-                    style="min-height:140px;"
-                    required placeholder="Tell guests what makes your place special..."><%= listing.description %></textarea>
-          <div class="invalid-feedback">Description is required</div>
-        </div>
-
-        <div class="p-3 bg-light rounded-4 border">
-          <p class="small fw-bold text-muted mb-3 text-uppercase">Geographic Details</p>
+        <section>
+          <h6 class="section-title">4. Location Details</h6>
           <div class="row g-3">
-            <div class="col-6">
-              <label for="lat" class="form-label small">Latitude</label>
-              <input id="lat" name="listing[lat]" type="number" step="any"
-                     class="form-control air-input bg-white" value="<%= listing.lat %>">
+            <div class="col-md-8">
+              <label for="location" class="form-label air-label">City/State</label>
+              <input id="location" name="listing[location]" type="text" class="form-control air-input" 
+                     value="<%= listing.location %>" placeholder="e.g. Mumbai, Maharashtra" required>
             </div>
-            <div class="col-6">
-              <label for="lng" class="form-label small">Longitude</label>
-              <input id="lng" name="listing[lng]" type="number" step="any"
-                     class="form-control air-input bg-white" value="<%= listing.lng %>">
+            <div class="col-md-4">
+              <label for="country" class="form-label air-label">Country</label>
+              <input id="country" name="listing[country]" type="text" class="form-control air-input" 
+                     value="<%= listing.country %>" placeholder="India" required>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="d-flex gap-3 mt-2">
-          <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark px-4 py-2 rounded-3 fw-semibold">Cancel</a>
-          <button type="submit" class="btn btn-black flex-grow-1 py-2 fw-bold">Update Listing</button>
+        <section>
+          <h6 class="section-title">5. Essentials & Features</h6>
+          <div class="card border-0 bg-dark text-white rounded-5 p-4 shadow-sm">
+            <p class="extra-small fw-bold mb-3" style="color: #aaa; letter-spacing: 1px;">Toggle Available Amenities</p>
+            <div class="row g-4">
+              <% const amenityKeys = ['wifi', 'ac', 'pool', 'kitchen', 'parking', 'gym']; %>
+              <% amenityKeys.forEach(key => { %>
+                <div class="col-6 col-md-4">
+                  <div class="form-check form-switch custom-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" name="listing[amenities][<%= key %>]" 
+                           id="<%= key %>" <%= listing.amenities && listing.amenities[key] ? 'checked' : '' %>>
+                    <label class="form-check-label small text-white-50" for="<%= key %>">
+                      <%= key === 'wifi' ? 'Fast Wi-Fi' : key.toUpperCase() %>
+                    </label>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </section>
+
+        <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
+          <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
+          <button type="submit" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
+            Update My Listing
+          </button>
         </div>
 
       </form>
@@ -91,71 +173,113 @@
 </div>
 
 <style>
-  .edit-listing-wrapper {
-    background-color: #fcfcfc;
-    min-height: 90vh;
+  :root {
+    --air-red: #ff385c;
+    --air-black: #222222;
   }
 
-  .air-label {
-    font-size: 0.9rem;
-    color: #222;
-    margin-bottom: 6px;
-  }
+  .listing-form-wrapper { background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%); min-height: 100vh; }
+  .rounded-5 { border-radius: 1.5rem !important; }
 
-  /* Custom Input Styling */
-  .air-input {
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1rem;
-    border: 1.5px solid #ddd;
-    background: #fff;
-    transition: all 0.2s ease;
+  .section-title { 
+    font-weight: 800; text-transform: uppercase; color: #b0b0b0; font-size: 0.7rem; 
+    letter-spacing: 2px; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 15px; 
   }
+  .section-title::after { content: ""; height: 1px; flex-grow: 1; background: #e0e0e0; }
 
-  .air-input:focus {
-    border-color: #000;
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
-    outline: none;
-  }
+  .air-label { font-size: 0.88rem; color: #222; margin-bottom: 8px; font-weight: 600 !important; display: block; }
+  .extra-small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; }
 
-  .input-group-text {
-    border: 1.5px solid #ddd;
-    border-radius: 0.75rem 0 0 0.75rem !important;
+  .air-input { 
+    border-radius: 12px !important; padding: 12px 18px; border: 1px solid #b0b0b0; 
+    background: #fff; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.95rem;
   }
+  .air-input:focus { border-color: var(--air-black); box-shadow: 0 0 0 1px var(--air-black); outline: none; }
 
-  /* Black Button Theme */
-  .btn-black {
-    background: #000;
-    color: #fff;
-    border: none;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-  }
+  .air-input-group { border-radius: 12px 0 0 12px !important; border: 1px solid #b0b0b0; background-color: #f8f9fa; font-weight: bold; }
 
-  .btn-black:hover {
-    background: #222;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-    color: #fff;
-  }
+  .custom-switch .form-check-input { width: 2.8em !important; height: 1.4em !important; cursor: pointer; }
+  .custom-switch .form-check-input:checked { background-color: var(--air-red); border-color: var(--air-red); }
 
-  /* Validation Colors */
-  .was-validated .form-control:invalid {
-    border-color: #ff385c;
+  .btn-launch { 
+    background: radial-gradient(circle at center, #FF385C 0%, #E61E4D 100%);
+    color: #fff; border: none; transition: all 0.4s ease;
   }
-  .was-validated .form-control:valid {
-    border-color: #000;
-  }
+  .btn-launch:hover { transform: scale(1.01); box-shadow: 0 10px 20px rgba(230, 30, 77, 0.25); color: #fff; filter: brightness(1.1); }
+
+  #image-preview-container { border: 2px dashed #ddd; background: #fafafa; }
+
+  .was-validated .form-control:invalid { border-color: #c13515 !important; }
+  .was-validated .form-control:valid { border-color: #008a05 !important; }
+  .custom-switch label { padding: 4px; }
 </style>
 
 <script>
+const categoryHints = {
+  "Rooms": "A private room in a home, plus access to shared spaces.",
+  "Hotels": "A professional hospitality stay, including boutique hotels or hostels.",
+  "Entire Home": "Guests have the whole place to themselves. Usually includes a kitchen.",
+  "Cabins": "Secluded, rustic homes usually located in woods or rural areas.",
+  "Luxe": "High-end architecture, premium amenities, and top-tier service.",
+  "Trending": "Properties with unique design or high demand this season."
+};
+
+function updateCategoryHint() {
+  const select = document.getElementById('category');
+  const hintDiv = document.getElementById('category-hint');
+  const selectedValue = select.value;
+  
+  if (categoryHints[selectedValue]) {
+    hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[selectedValue]}`;
+  }
+}
+
+// Init logic
+window.addEventListener('DOMContentLoaded', updateCategoryHint);
+
 (() => {
-  const form = document.querySelector('.needs-validation');
-  form.addEventListener('submit', event => {
-    if (!form.checkValidity()) {
-      event.preventDefault();
-      event.stopPropagation();
+  'use strict'
+  const imgInput = document.getElementById('image');
+  const preview = document.getElementById('image-preview');
+  const previewContainer = document.getElementById('image-preview-container');
+
+  const updatePreview = () => {
+    const url = imgInput.value.trim();
+    if(url !== "") {
+      preview.src = url;
+      previewContainer.classList.remove('d-none');
+    } else {
+      previewContainer.classList.add('d-none');
     }
-    form.classList.add('was-validated');
-  });
-})();
+  }
+
+  imgInput.addEventListener('input', updatePreview);
+  window.addEventListener('load', updatePreview);
+
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+const priceInput = document.getElementById('price');
+const serviceFeeInput = document.getElementById('serviceFee');
+const SERVICE_FEE_PCT = 0.03; // 3% Platform Fee
+
+function calculateFees() {
+    const price = parseFloat(priceInput.value) || 0;
+    const calculatedFee = Math.round(price * SERVICE_FEE_PCT);
+    serviceFeeInput.value = calculatedFee;
+}
+
+// Listen for price changes
+priceInput.addEventListener('input', calculateFees);
+
+// Run on page load to set initial value
+window.addEventListener('load', calculateFees);
 </script>

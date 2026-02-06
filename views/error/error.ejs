@@ -70,9 +70,39 @@
     border: 1px dashed #ddd;
     overflow-x: auto;
   }
+
+  /* Add these to your existing classes */
+
+.error-message {
+  font-size: 18px;
+  color: #222222;
+  margin-bottom: 32px;
+  font-weight: 400;
+  
+  /* NEW: Fixes for text overflow */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word; 
+}
+
+.debug-info {
+  margin-top: 40px;
+  text-align: left;
+  background: #f7f7f7;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #717171;
+  border: 1px dashed #ddd;
+  
+  /* NEW: Allow horizontal scrolling for very long code lines */
+  overflow-x: auto;
+  white-space: pre-wrap; /* Keeps formatting but wraps lines */
+  word-break: break-all;
+}
 </style>
 
-<div class="container error-container">
+<div class="container error-container" style="margin-top: 3vh;">
   <div class="error-card">
     <span class="material-symbols-outlined error-icon">
       error_medley

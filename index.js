@@ -60,16 +60,20 @@ app.use(session({
 app.use(flash());
 
 // ================= LOCALS MIDDLEWARE =================
+
+// Keep this one (around line 75)
 app.use(asyncWrap(async (req, res, next) => {
     const { userId } = req.session; 
     res.locals.currentUser = userId ? await User.findById(userId).select("username role") : null;
-    // req.flash() returns an array; ensure it's available to all EJS templates
-    res.locals.success = req.flash("success") || [];
-    res.locals.error = req.flash("error") || [];
+    
+    const s = req.flash("success");
+    const e = req.flash("error");
+    res.locals.success = s.length > 0 ? s : null;
+    res.locals.error = e.length > 0 ? e : null;
     next();
 }));
-
 // ================= HELPERS =================
+// ================= HELPERS & FIXES =================
 const isLoggedIn = (req, res, next) => {
     if (!req.session.userId) {
         req.flash("error", "You must be logged in to airHost first!");
@@ -81,6 +85,20 @@ const isLoggedIn = (req, res, next) => {
 const validateObjectId = (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         throw new ExpressError(400, "Invalid ID Format");
+    }
+    next();
+};
+
+// ADD THIS HERE:
+const fixAmenities = (req, res, next) => {
+    if (req.body.listing) {
+        req.body.listing.amenities = req.body.listing.amenities || {};
+        const possibleAmenities = ['wifi', 'ac', 'kitchen', 'parking', 'pool', 'gym', 'workspacer', 'pets', 'cctv'];
+        
+        possibleAmenities.forEach(key => {
+            // Converts "on" to true, and missing keys (unchecked) to false
+            req.body.listing.amenities[key] = req.body.listing.amenities[key] === 'on';
+        });
     }
     next();
 };
@@ -164,11 +182,36 @@ app.get("/user/listings", isLoggedIn, asyncWrap(async (req, res) => {
     });
 }));
 
-app.get("/listings/new", isLoggedIn, (req, res) => res.render("listings/new", { title: "Become an airHost" }));
+app.get("/listings/new", isLoggedIn, (req, res) => {
+    // Pass isEdit: false and an empty listing object so the form doesn't crash
+    res.render("listings/new", { 
+        title: "Become an airHost", 
+        isEdit: false, 
+        listing: {} 
+    });
+});
 
-app.post("/listings/createListing", isLoggedIn, validateBody(listingSchema), asyncWrap(async (req, res) => {
-    const newListing = new Listing({ ...req.body.listing, owner: req.session.userId });
+
+app.post("/listings/createListing", isLoggedIn, fixAmenities, validateBody(listingSchema), asyncWrap(async (req, res) => {
+    // 1. Extract listing data (already cleaned by fixAmenities middleware)
+    const { listing } = req.body;
+
+    // 2. Ensure Numeric Fields are valid numbers
+    // Note: We use || 0 to prevent NaN if the user leaves optional fields blank
+    listing.price = Number(listing.price);
+    listing.cleaningFee = Number(listing.cleaningFee || 0);
+    listing.serviceFeePct = Number(listing.serviceFeePct || 3);
+    listing.guests = Number(listing.guests || 1);
+
+    // 3. Create the Listing
+    const newListing = new Listing({ 
+        ...listing, 
+        owner: req.session.userId // FIXED: Using manual session ID instead of req.user
+    });
+
+    // 4. Save and Redirect
     await newListing.save();
+    
     req.flash("success", "New airHost listing created!");
     res.redirect(`/listings/${newListing._id}`);
 }));
@@ -192,30 +235,61 @@ app.get("/listings/:id/edit", isLoggedIn, validateObjectId, asyncWrap(async (req
         req.flash("error", "Permission denied.");
         return res.redirect(`/listings/${req.params.id}`);
     }
-    res.render("listings/edit", { listing, title: "Edit airHost Listing" });
+    // Pass isEdit: true and the existing listing data
+    res.render("listings/edit", { 
+        listing, 
+        isEdit: true, 
+        title: "Edit airHost Listing" 
+    });
 }));
 
-app.put("/listings/:id", isLoggedIn, validateObjectId, validateBody(listingSchema), asyncWrap(async (req, res) => {
-    const listing = await Listing.findById(req.params.id);
+app.put("/listings/:id", isLoggedIn, validateObjectId, fixAmenities, validateBody(listingSchema), asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+    
+    // Authorization Check
     const isAdmin = res.locals.currentUser?.role === "admin";
     if (!listing.owner.equals(req.session.userId) && !isAdmin) {
         req.flash("error", "Unauthorized.");
-        return res.redirect(`/listings/${req.params.id}`);
+        return res.redirect(`/listings/${id}`);
     }
-    await Listing.findByIdAndUpdate(req.params.id, { ...req.body.listing });
+
+    // 1. Extract cleaned data from body
+    const updateData = { ...req.body.listing };
+
+    // 2. Clean up Numeric Fields (Ensures data types are correct for MongoDB)
+    updateData.price = Number(updateData.price);
+    updateData.cleaningFee = Number(updateData.cleaningFee || 0);
+    updateData.serviceFeePct = Number(updateData.serviceFeePct || 3);
+    updateData.guests = Number(updateData.guests || 1);
+
+    // 3. Update the Database
+    await Listing.findByIdAndUpdate(id, updateData, { runValidators: true });
+
     req.flash("success", "Updated successfully!");
-    res.redirect(`/listings/${req.params.id}`);
+    res.redirect(`/listings/${id}`);
 }));
 
 app.delete("/listings/:id", isLoggedIn, validateObjectId, asyncWrap(async (req, res) => {
-    const listing = await Listing.findById(req.params.id);
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+
+    // 1. Quick Auth Check
     const isAdmin = res.locals.currentUser?.role === "admin";
-    if (!listing.owner.equals(req.session.userId) && !isAdmin) {
-        req.flash("error", "Unauthorized.");
+    if (!listing || (!listing.owner.equals(req.session.userId) && !isAdmin)) {
+        req.flash("error", "Unauthorized or Listing not found.");
         return res.redirect("/");
     }
-    await Listing.findByIdAndDelete(req.params.id);
-    req.flash("success", "Listing removed.");
+
+    // 2. Fast Cleanup & Removal
+    // We combine the cleanup and listing removal into a parallel execution
+    await Promise.all([
+        Review.deleteMany({ _id: { $in: listing.reviews } }),
+        Reservation.deleteMany({ _id: { $in: listing.reservations } }),
+        Listing.findByIdAndDelete(id)
+    ]);
+    
+    req.flash("success", "Listing and all linked data removed.");
     res.redirect("/");
 }));
 
@@ -267,25 +341,73 @@ app.delete("/reviews/:id", isLoggedIn, asyncWrap(async (req, res) => {
 // / ================= user Profile SECTION =================
 
 app.get("/profile", isLoggedIn, asyncWrap(async (req, res) => {
-    // You can also fetch specific user listings here to display them
-    res.render("dashboard/profile", { title: "My Profile | airHost" });
+    const userId = req.session.userId;
+
+    // Fetch counts from database
+    const listingsCount = await Listing.countDocuments({ owner: userId });
+    const reservationsCount = await Reservation.countDocuments({ guest: userId });
+
+    res.render("dashboard/profile", { 
+        title: "My Profile | airHost", 
+        listingsCount, 
+        reservationsCount 
+    });
 }));
 
 
 // / ================= Dashboard SECTION =================
 
 app.get("/dashboard/reservations", isLoggedIn, asyncWrap(async (req, res) => {
-    // FIX: Use req.session.userId because that's where you store the ID
+    // 1. Find listings and sort them by 'createdAt' in descending order (-1)
     const listings = await Listing.find({ owner: req.session.userId })
+        .sort({ createdAt: -1 }) 
         .populate({
             path: 'reservations',
-            populate: { path: 'guest', select: 'username' } // Only get username for safety
+            // 2. Sort the nested reservations by 'createdAt' descending so newest bookings are first
+            options: { sort: { 'createdAt': -1 } }, 
+            populate: { path: 'guest', select: 'username' }
         });
 
     res.render("dashboard/reservationDashboard", { 
         listings, 
         title: "Reservation Dashboard | airHost" 
     });
+}));
+
+// ================= USER BOOKING HISTORY =================
+app.get("/dashboard/trips/history", isLoggedIn, asyncWrap(async (req, res) => {
+    // Find reservations made by the logged-in user
+    const reservations = await Reservation.find({ guest: req.session.userId })
+        .populate("listing") // To show the property name/image
+        .sort({ createdAt: -1 }); // Newest bookings first
+
+    res.render("dashboard/userHistory", { 
+        reservations, 
+        title: "My Trips | airHost" 
+    });
+}));
+
+// Route for guests to mark their trip as Cancelled (Soft Delete)
+app.put("/dashboard/trips/:id/cancel", isLoggedIn, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+        req.flash("error", "Reservation not found.");
+        return res.redirect("/dashboard/trips/history");
+    }
+
+    // Security Check: Ensure the guest owns this reservation
+    if (!reservation.guest.equals(req.session.userId)) {
+        req.flash("error", "Unauthorized action.");
+        return res.redirect("/dashboard/trips/history");
+    }
+
+    // Instead of deleting, we update the status
+    await Reservation.findByIdAndUpdate(id, { status: "Cancelled" });
+
+    req.flash("success", "Trip has been cancelled. It will remain in your history.");
+    res.redirect("/dashboard/trips/history");
 }));
 
 
@@ -328,14 +450,40 @@ app.delete("/dashboard/reservations/:id", isLoggedIn, asyncWrap(async (req, res)
 
 app.post("/listings/:id/reserve", isLoggedIn, asyncWrap(async (req, res) => {
     const { id } = req.params;
-    // Extracting the new guest count fields from the request body
-    const { checkIn, checkOut, price, adults, children } = req.body.reservation;
+    const { checkIn, checkOut, adults, children } = req.body.reservation;
 
+    // 1. Fetch the listing to get the AUTHORITATIVE prices
+    const listing = await Listing.findById(id);
+    if (!listing) {
+        req.flash("error", "Listing not found!");
+        return res.redirect("/");
+    }
+
+    // 2. Calculate Date Difference (Days)
+    const d1 = new Date(checkIn);
+    const d2 = new Date(checkOut);
+    const diffTime = d2 - d1;
+    const dayCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (dayCount <= 0) {
+        req.flash("error", "Invalid check-in/check-out dates.");
+        return res.redirect(`/listings/${id}`);
+    }
+
+    // 3. The Math (Replicating your EJS Logic)
+    const basePrice = listing.price * dayCount;
+    const cleaningFee = listing.cleaningFee || 0;
+    const serviceFee = Math.round(basePrice * ((listing.serviceFeePct || 0) / 100));
+    
+    const subtotal = basePrice + cleaningFee + serviceFee;
+    const gst = Math.round(subtotal * 0.18); // 18% GST
+    const finalCalculatedTotal = subtotal + gst;
+
+    // 4. Create the Reservation with the verified price
     const newReservation = new Reservation({
         checkIn,
         checkOut,
-        price,
-        // Adding the counts to the document
+        price: finalCalculatedTotal, // This is the final 18% GST included price
         guests: {
             adults: parseInt(adults) || 1,
             children: parseInt(children) || 0
@@ -348,7 +496,7 @@ app.post("/listings/:id/reserve", isLoggedIn, asyncWrap(async (req, res) => {
     await newReservation.save();
     await Listing.findByIdAndUpdate(id, { $push: { reservations: newReservation._id } });
 
-    req.flash("success", "Reservation request sent to host!");
+    req.flash("success", `Reservation sent! Total: ₹${finalCalculatedTotal.toLocaleString("en-IN")}`);
     res.redirect(`/listings/${id}`);
 }));
 

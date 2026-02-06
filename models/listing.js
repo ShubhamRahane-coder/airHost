@@ -37,7 +37,6 @@ const listingSchema = new Schema(
       trim: true,
     },
 
-    // ✅ Image as object (important)
     image: {
       url: {
         type: String,
@@ -55,19 +54,41 @@ const listingSchema = new Schema(
       },
     },
 
-    // ✅ Map support
+    // --- NEW FIELDS: CATEGORY & GUESTS ---
+    
+
+    guests: {
+      type: Number,
+      required: [true, "Guest capacity is required"],
+      min: [1, "Minimum 1 guest required"],
+      default: 1,
+    },
+
+    // --- NEW FIELD: NESTED AMENITIES ---
+    amenities: {
+      wifi: { type: Boolean, default: false },
+      ac: { type: Boolean, default: false },
+      kitchen: { type: Boolean, default: false },
+      parking: { type: Boolean, default: false },
+      pool: { type: Boolean, default: false },
+      gym: { type: Boolean, default: false },
+      workspacer: { type: Boolean, default: false },
+      pets: { type: Boolean, default: false },
+      cctv: { type: Boolean, default: false },
+    },
+
     lat: {
       type: Number,
       min: [-90, "Latitude must be >= -90"],
       max: [90, "Latitude must be <= 90"],
-      default: 18.879702, // Default Latitude (New Delhi)
+      default: 18.879702,
     },
 
     lng: {
       type: Number,
       min: [-180, "Longitude must be >= -180"],
       max: [180, "Longitude must be <= 180"],
-      default: 72.140273, // Default Longitude (New Delhi)
+      default: 72.140273,
     },
 
     owner: {
@@ -82,12 +103,31 @@ const listingSchema = new Schema(
         ref: "Review",
       },
     ],
+
     reservations: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Reservation",
       },
     ],
+
+    cleaningFee: {
+      type: Number,
+      default: 0,
+      min: [0, "Cleaning fee cannot be negative"]
+    },
+
+    serviceFeePct: {
+      type: Number,
+      default: 3, 
+      min: [0, "Service fee percent cannot be negative"],
+      max: [100, "Service fee cannot exceed 100%"]
+    },
+    category: {
+    type: String,
+    enum: ["Rooms", "Hotels", "Entire Home", "Cabins", "Luxe"], 
+    required: true
+}
   },
   {
     timestamps: true,

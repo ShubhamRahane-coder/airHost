@@ -4,89 +4,111 @@
   <div class="row g-4">
     
     <div class="col-lg-4">
-      <div class="card border-0 shadow-sm p-4 rounded-4 profile-sidebar">
+      <div class="card border-0 shadow-lg p-4 rounded-5 profile-sidebar overflow-hidden">
         <div class="text-center mb-4">
-          <div class="profile-avatar-big mx-auto mb-3">
+          <div class="profile-avatar-big mx-auto mb-3 shadow">
             <%= currentUser.username.charAt(0).toUpperCase() %>
           </div>
-          <h3 class="fw-bold mb-0"><%= currentUser.username %></h3>
-          <p class="text-muted small"><%= currentUser.role === 'admin' ? '🛡️ Administrator' : 'Verified Host' %></p>
+          <h3 class="fw-bold mb-0 text-dark"><%= currentUser.username %></h3>
+          <p class="badge bg-dark rounded-pill px-3 py-2 mt-2">
+            <%= currentUser.role === 'admin' ? '🛡️ Administrator' : 'Verified airHost' %>
+          </p>
         </div>
 
-        <div class="profile-stats d-flex justify-content-around py-3 border-top border-bottom mb-4">
+        <div class="profile-stats d-flex justify-content-around py-3 bg-light rounded-4 mb-4">
           <div class="text-center">
-            <span class="fw-bold d-block h5 mb-0">0</span>
-            <small class="text-muted extra-small">Bookings</small>
+            <span class="fw-bold d-block h4 mb-0 text-dark">
+                <%= (reservationsCount) ? reservationsCount : '0' %>
+            </span>
+            <small class="text-muted extra-small">Trips</small>
           </div>
-          <div class="text-center">
-            <span class="fw-bold d-block h5 mb-0">0</span>
-            <small class="text-muted extra-small">Reviews</small>
-          </div>
-        </div>
-
-        <div class="profile-info">
-          <div class="d-flex align-items-center mb-3">
-            <span class="material-symbols-outlined me-3 text-secondary">mail</span>
-            <span class="small text-dark">Contact support to change email</span>
-          </div>
-          <div class="d-flex align-items-center mb-3">
-            <span class="material-symbols-outlined me-3 text-secondary">verified_user</span>
-            <span class="small text-dark">Identity Verified</span>
+          <div class="text-center border-start ps-4">
+            <span class="fw-bold d-block h4 mb-0 text-dark">
+                <%= (listingsCount) ? listingsCount : '0' %>
+            </span>
+            <small class="text-muted extra-small">Listings</small>
           </div>
         </div>
 
-        <button class="btn btn-black w-100 mt-3 py-2 fw-bold">Edit Profile</button>
+        <div class="profile-info space-y-3">
+          <div class="d-flex align-items-center mb-3 p-2 hover-bg rounded-3 transition">
+            <div class="icon-circle me-3"><span class="material-symbols-outlined fs-5">mail</span></div>
+            <div>
+                <small class="text-muted d-block x-small fw-bold text-uppercase">Email</small>
+                <span class="small text-dark fw-semibold">Member since <%= new Date().getFullYear() %></span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center mb-3 p-2 hover-bg rounded-3 transition">
+            <div class="icon-circle me-3"><span class="material-symbols-outlined fs-5 text-success">verified_user</span></div>
+            <div>
+                <small class="text-muted d-block x-small fw-bold text-uppercase">Identity</small>
+                <span class="small text-dark fw-semibold">Verified User</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-black w-100 mt-3 py-2 fw-bold shadow-sm">
+            <span class="material-symbols-outlined fs-6 align-middle me-1">edit_square</span> Edit Profile
+        </button>
       </div>
     </div>
 
     <div class="col-lg-8">
-      <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
-        <h4 class="fw-bold mb-4">Welcome back, <%= currentUser.username %>!</h4>
-        <p class="text-muted">Manage your airHost account, check your listing status, and update your preferences here.</p>
+      <div class="card border-0 shadow-sm p-4 p-md-5 rounded-5 mb-4 welcome-card">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h2 class="fw-bold mb-1 text-dark">Welcome back, <%= currentUser.username %>!</h2>
+                <p class="text-muted">Manage your airHost dashboard and account preferences.</p>
+            </div>
+            <span class="material-symbols-outlined display-4 text-light-gray">waving_hand</span>
+        </div>
         
-        <div class="row g-3 mt-2">
+        <div class="row g-4 mt-2">
           <div class="col-md-6">
-            <div class="activity-card p-3 rounded-3 border">
-              <span class="material-symbols-outlined fs-2 mb-2 text-dark">home_work</span>
-              <h6 class="fw-bold mb-1">Your Listings</h6>
-              <p class="extra-small text-muted mb-2">View and manage properties you've added.</p>
-              <a href="/user/listings" class="small fw-bold text-dark text-decoration-none hover-link">View all →</a>
+            <div class="activity-card p-4 rounded-4 border-light-gray h-100">
+              <div class="icon-box-dark mb-3"><span class="material-symbols-outlined">home_work</span></div>
+              <h5 class="fw-bold mb-2">Your Listings</h5>
+              <p class="small text-muted mb-3">Optimize and manage the properties you are hosting.</p>
+              <a href="/user/listings" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold">Manage</a>
             </div>
           </div>
-<div class="col-md-6">
-  <div class="activity-card p-3 rounded-3 border bg-white shadow-sm h-100">
-    <span class="material-symbols-outlined fs-2 mb-2 text-primary">receipt_long</span>
-    
-    <h6 class="fw-bold mb-1 text-dark">Reservation Ledger</h6>
-    
-    <p class="extra-small text-muted mb-3">
-      Track guest payouts, verified identity logs, and live booking settlements.
-    </p>
-
-    <a href="/dashboard/reservations" class="small fw-bold text-dark text-decoration-none hover-link d-flex align-items-center">
-      View Transaction History <span class="material-symbols-outlined fs-6 ms-1">arrow_right_alt</span>
-    </a>
-  </div>
-</div>
 
           <div class="col-md-6">
-            <div class="activity-card p-3 rounded-3 border">
-              <span class="material-symbols-outlined fs-2 mb-2 text-dark">settings</span>
-              <h6 class="fw-bold mb-1">Account Settings</h6>
-              <p class="extra-small text-muted mb-2">Update security and privacy preferences.</p>
-              <a href="/help" class="small fw-bold text-dark text-decoration-none hover-link">Configure →</a>
+            <div class="activity-card p-4 rounded-4 border-light-gray h-100 active-shadow">
+              <div class="icon-box-blue mb-3"><span class="material-symbols-outlined">account_balance_wallet</span></div>
+              <h5 class="fw-bold mb-2">Host Ledger</h5>
+              <p class="small text-muted mb-3">Track payouts, earnings, and booking settlements.</p>
+              <a href="/dashboard/reservations" class="btn btn-dark btn-sm rounded-pill px-4 fw-bold">View Earnings</a>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="activity-card p-4 rounded-4 border-light-gray h-100">
+              <div class="icon-box-red mb-3"><span class="material-symbols-outlined">travel</span></div>
+              <h5 class="fw-bold mb-2">Personal Trips</h5>
+              <p class="small text-muted mb-3">Check status and history of stays you've booked.</p>
+              <a href="/dashboard/trips/histry" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold">History</a>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="activity-card p-4 rounded-4 border-light-gray h-100">
+              <div class="icon-box-gray mb-3"><span class="material-symbols-outlined">settings_account_box</span></div>
+              <h5 class="fw-bold mb-2">Account Privacy</h5>
+              <p class="small text-muted mb-3">Update your password and security settings.</p>
+              <a href="/help" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold">Security</a>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm p-4 rounded-4 bg-dark text-white">
-        <div class="d-flex justify-content-between align-items-start">
+      <div class="card border-0 shadow-lg p-4 rounded-5 bg-gradient-dark text-white">
+        <div class="d-flex align-items-center gap-4">
+          <div class="bulb-icon"><span class="material-symbols-outlined display-5">emoji_objects</span></div>
           <div>
-            <h5 class="fw-bold">Hosting Tip</h5>
-            <p class="small text-white-50 mb-0">High-quality photos increase booking rates by 40%. Update your property images today!</p>
+            <h5 class="fw-bold mb-1 text-warning">Hosting Pro Tip</h5>
+            <p class="small text-white-50 mb-0">Listings with "Verified Identity" badges get 25% more booking requests. Your badge is currently active!</p>
           </div>
-          <span class="material-symbols-outlined fs-1 text-white-50">lightbulb</span>
         </div>
       </div>
     </div>
@@ -95,64 +117,68 @@
 </div>
 
 <style>
-  .profile-wrapper {
-    min-height: 80vh;
+  :root {
+    --air-red: #ff385c;
+    --air-dark: #222222;
+    --air-gray: #717171;
+    --light-bg: #f7f7f7;
   }
 
-  /* Profile Card Styles */
-  .profile-sidebar {
-    position: sticky;
-    top: 100px;
+  .profile-wrapper { min-height: 85vh; background: #fafafa; }
+  .rounded-5 { border-radius: 2rem !important; }
+  .border-light-gray { border: 1px solid #eeeeee !important; }
+  .text-light-gray { color: #e0e0e0; }
+  .x-small { font-size: 0.65rem; }
+  
+  .bg-gradient-dark {
+    background: linear-gradient(135deg, #111 0%, #333 100%);
   }
 
+  /* Profile Avatar */
   .profile-avatar-big {
-    width: 100px;
-    height: 100px;
-    background: #000;
+    width: 110px; height: 110px;
+    background: var(--air-dark);
     color: #fff;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    font-weight: 800;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; font-weight: 900;
   }
 
-  .extra-small {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  /* Icon Containers */
+  .icon-circle {
+    width: 40px; height: 40px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
   }
 
-  /* Activity Cards */
+  .icon-box-dark, .icon-box-blue, .icon-box-red, .icon-box-gray {
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-box-dark { background: #e8e8e8; color: #000; }
+  .icon-box-blue { background: #e3f2fd; color: #1976d2; }
+  .icon-box-red { background: #ffebee; color: #d32f2f; }
+  .icon-box-gray { background: #f5f5f5; color: #616161; }
+
+  /* Activity Card Hover */
   .activity-card {
-    transition: all 0.3s ease;
     background: #fff;
-    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   }
-
   .activity-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.06);
     border-color: #000 !important;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    transform: translateY(-3px);
   }
 
-  /* Universal Black Button */
   .btn-black {
-    background: #000;
-    color: #fff;
-    border-radius: 10px;
-    transition: 0.3s;
+    background: #000; color: #fff;
+    border-radius: 12px; transition: 0.3s;
   }
+  .btn-black:hover { background: #333; transform: translateY(-2px); color: #fff; }
 
-  .btn-black:hover {
-    background: #222;
-    color: #fff;
-    transform: scale(1.02);
-  }
-
-  .hover-link:hover {
-    color: #ff385c !important;
-  }
+  .transition { transition: 0.2s ease; }
+  .hover-bg:hover { background: #f8f8f8; }
 </style>

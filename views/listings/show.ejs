@@ -2,6 +2,54 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
+<div id="customConfirmModal" class="custom-modal-overlay" style="display: none;">
+    <div class="custom-modal-card">
+        <div class="modal-body-content text-center p-4">
+            <div class="confirm-icon mb-3">
+                <span class="material-symbols-outlined text-danger" style="font-size: 48px;">bedtime</span>
+            </div>
+            <h4 class="fw-bold mb-3">Confirm Reservation</h4>
+            <div id="confirmDetails" class="text-start bg-light p-3 rounded-4 mb-4 small"></div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-light w-100 rounded-pill fw-bold" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-air-primary w-100 rounded-pill fw-bold" onclick="finalSubmit()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="priceBreakdownModal" class="custom-modal-overlay" style="display: none;">
+    <div class="custom-modal-card">
+        <div class="modal-body-content p-4">
+            <h4 class="fw-bold mb-4 text-center">Price breakdown</h4>
+            <div class="price-details">
+                <div class="d-flex justify-content-between mb-2">
+                    <span id="modalBaseCalc">₹ <%= listing.price.toLocaleString("en-IN") %> x 0 days</span>
+                    <span id="modalBaseTotal">₹ 0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-decoration-underline">Cleaning fee</span>
+                    <span>₹ <%= listing.cleaningFee || 0 %></span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-decoration-underline">Service fee (<%= listing.serviceFeePct || 0 %>%)</span>
+                    <span id="modalServiceFee">₹ 0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3 text-danger fw-bold">
+                    <span>GST (18%)</span>
+                    <span id="modalGstAmount">₹ 0</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5 mt-3">
+                    <span>Total (INR)</span>
+                    <span id="modalFinalTotal" class="text-dark">₹ 0</span>
+                </div>
+            </div>
+            <button type="button" class="btn btn-air-primary w-100 rounded-pill fw-bold mt-4 py-3" onclick="closePriceModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <div class="container show-container mt-5">
   <div class="row">
     <div class="col-12 mb-3">
@@ -71,20 +119,20 @@
     <div class="col-lg-5">
       <div class="reservation-card p-4 rounded-4 shadow border bg-white mb-4 sticky-top" style="top: 100px; z-index: 10;">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h4 class="mb-0 fw-bold">₹ <%= listing.price.toLocaleString("en-IN") %> <small class="fw-light text-muted">/ night</small></h4>
-          <a href="#" class="text-muted small text-decoration-underline">Show price breakdown</a>
+          <h4 class="mb-0 fw-bold">₹ <%= listing.price.toLocaleString("en-IN") %> <small class="fw-light text-muted">/ daily</small></h4>
+          <a href="javascript:void(0)" onclick="openPriceModal()" class="text-muted small text-decoration-underline">Show price breakdown</a>
         </div>
         
-        <form action="/listings/<%= listing._id %>/reserve" method="POST">
+        <form action="/listings/<%= listing._id %>/reserve" method="POST" id="reservationForm">
           <div class="reservation-dates border rounded-3 overflow-hidden mb-3">
             <div class="row g-0 border-bottom">
               <div class="col-6 border-end p-2">
                 <label class="small fw-bold d-block">Check-in</label>
-                <input type="date" name="reservation[checkIn]" class="date-input-flat w-100 border-0" required value="2026-02-20">
+                <input type="date" name="reservation[checkIn]" id="checkIn" class="date-input-flat w-100 border-0" required value="2026-02-20">
               </div>
               <div class="col-6 p-2">
                 <label class="small fw-bold d-block">Checkout</label>
-                <input type="date" name="reservation[checkOut]" class="date-input-flat w-100 border-0" required value="2026-02-22">
+                <input type="date" name="reservation[checkOut]" id="checkOut" class="date-input-flat w-100 border-0" required value="2026-02-22">
               </div>
             </div>
 
@@ -118,21 +166,24 @@
           </div>
 
           <input type="hidden" name="reservation[price]" value="<%= listing.price %>">
+          <input type="hidden" name="reservation[totalPrice]" id="hiddenFinalTotal" value="0">
 
-          <button type="submit" class="btn btn-air-primary w-100 py-3 fw-bold mb-3">Reserve</button>
+          <button type="button" onclick="<%= currentUser ? 'handleReservation()' : "window.location.href='/login'" %>"
+                  class="btn btn-air-primary w-100 py-3 fw-bold mb-3">
+            Reserve
+          </button>
         </form>
 
         <p class="text-center small text-muted mb-0">You won't be charged yet</p>
         
         <div class="mt-4 p-3 border rounded-3 bg-light-subtle d-flex align-items-center">
           <span class="material-symbols-outlined text-danger me-2">cancel</span>
-          <p class="small mb-0 fw-semibold">Free cancellation before 19 February</p>
+          <p class="small mb-0 fw-semibold">Free cancellation before <span id="cancel-deadline">6 hours of booking</span></p>
         </div>
       </div>
     </div>
 
     <hr class="my-5">
-
     <div class="col-12 mb-5">
       <div class="row">
         <div class="col-lg-4 mb-4">
@@ -187,11 +238,6 @@
                         </div>
                       </div>
                       <p class="small text-muted mb-2"><%= review.comment %></p>
-                      <% if (currentUser && (currentUser.role === "admin" || (review.author && currentUser._id.toString() === review.author._id.toString()))) { %>
-                        <form action="/reviews/<%= review._id %>?_method=DELETE" method="POST">
-                          <button class="btn btn-link text-danger p-0 small text-decoration-none">Delete</button>
-                        </form>
-                      <% } %>
                     </div>
                   </div>
                 <% }) %>
@@ -214,39 +260,59 @@
 </div>
 
 <style>
+  /* Reuse Modal Styles */
+  .custom-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .custom-modal-card {
+    background: white; width: 90%; max-width: 400px;
+    border-radius: 2rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: slideUp 0.3s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* Page Styles - Kept Exact */
   .show-container { max-width: 1100px; margin: auto; }
   .btn-air-primary { background: #ff385c; color: white; border: none; transition: 0.3s; }
   .btn-air-primary:hover { background: #e31c5f; transform: scale(1.02); }
   .btn-air-secondary { background: #f8f9fa; border: 1px solid #ddd; color: #222; }
   .btn-air-danger { background: #fff; border: 1px solid #ff385c; color: #ff385c; }
-  
   .show-img { width: 100%; max-height: 500px; object-fit: cover; border-radius: 1.5rem; }
   .owner-avatar { width: 45px; height: 45px; background: #222; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
   .premium-badge { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 50px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
-
   .amenity-item { display: flex; align-items: center; }
   .amenity-item span { margin-right: 12px; font-size: 24px; color: #484848; }
-
-  .reservation-card { box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; border-radius: 1rem; }
+  .reservation-card { box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; border-radius: 1.5rem; }
   .date-input-flat { border: none; background: transparent; font-size: 0.85rem; color: #717171; outline: none; cursor: pointer; }
-  
   .author-letter-badge { width: 40px; height: 40px; background: #e7e4e4; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-
   .star-rating input { display: none; }
   .star-rating label { color: #ddd; cursor: pointer; transition: 0.2s; font-size: 28px; }
-  .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { 
-    color: #ff385c; font-variation-settings: 'FILL' 1; 
-  }
-
+  .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #ff385c; font-variation-settings: 'FILL' 1; }
   .controls { user-select: none; line-height: 0.8; }
   .clickable { font-size: 18px !important; cursor: pointer; color: #717171; transition: 0.2s; }
   .clickable:hover { color: #ff385c; }
-
   #map { z-index: 1; display: block; }
+
+  /* Price Details Styling */
+  .price-details span { color: #222; font-size: 1rem; }
+  .price-details hr { border-top: 1px solid #ddd; margin: 1.5rem 0; }
 </style>
+
+
+
+
+
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+  // Configuration from Backend - Using || 0 to handle cases where these aren't set
+  const PRICE_PER_DAYS = <%= listing.price %>;
+  const CLEANING_FEE = <%= listing.cleaningFee || 0 %>;
+  const SERVICE_FEE_PCT = <%= listing.serviceFeePct || 0 %>; 
+
+  // --- GUEST COUNT LOGIC ---
   function changeVal(id, delta) {
     const input = document.getElementById(id);
     const newVal = parseInt(input.value) + delta;
@@ -255,20 +321,117 @@
     }
   }
 
+  // --- MODAL CONTROLS ---
+  function openPriceModal() { document.getElementById('priceBreakdownModal').style.display = 'flex'; }
+  function closePriceModal() { document.getElementById('priceBreakdownModal').style.display = 'none'; }
+  function closeConfirmModal() { document.getElementById('customConfirmModal').style.display = 'none'; }
+  function finalSubmit() { document.getElementById('reservationForm').submit(); }
+
+  window.onclick = function(event) {
+    const confirmModal = document.getElementById('customConfirmModal');
+    const priceModal = document.getElementById('priceBreakdownModal');
+    if (event.target == confirmModal) closeConfirmModal();
+    if (event.target == priceModal) closePriceModal();
+  }
+
+  // --- CALCULATION LOGIC ---
+  function updatePriceBreakdown() {
+    const checkInVal = document.getElementById('checkIn').value;
+    const checkOutVal = document.getElementById('checkOut').value;
+
+    if (checkInVal && checkOutVal) {
+      const d1 = new Date(checkInVal);
+      const d2 = new Date(checkOutVal);
+      const diffTime = d2 - d1;
+      const dayCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (dayCount > 0) {
+        const baseTotal = PRICE_PER_DAYS * dayCount;
+        const serviceFee = Math.round(baseTotal * (SERVICE_FEE_PCT / 100));
+        const subtotal = baseTotal + CLEANING_FEE + serviceFee;
+        const gst = Math.round(subtotal * 0.18); 
+        const finalTotal = subtotal + gst;
+
+        // Update Modal UI
+        document.getElementById('modalBaseCalc').innerText = `₹ ${PRICE_PER_DAYS.toLocaleString("en-IN")} x ${dayCount} days`;
+        document.getElementById('modalBaseTotal').innerText = `₹ ${baseTotal.toLocaleString("en-IN")}`;
+        document.getElementById('modalServiceFee').innerText = `₹ ${serviceFee.toLocaleString("en-IN")}`;
+        document.getElementById('modalGstAmount').innerText = `₹ ${gst.toLocaleString("en-IN")}`;
+        document.getElementById('modalFinalTotal').innerText = `₹ ${finalTotal.toLocaleString("en-IN")}`;
+        
+        // SYNC TO HIDDEN INPUT FOR BACKEND
+        const hiddenInput = document.getElementById('hiddenFinalTotal');
+        if(hiddenInput) hiddenInput.value = finalTotal;
+      }
+    }
+  }
+
+  function updateCancellationWindow() {
+    const checkInInput = document.getElementById('checkIn');
+    const deadlineSpan = document.getElementById('cancel-deadline');
+    const checkInDate = new Date(checkInInput.value);
+    if (!isNaN(checkInDate)) {
+        const deadline = new Date(checkInDate.getTime() - (6 * 60 * 60 * 1000));
+        const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+        deadlineSpan.innerText = deadline.toLocaleDateString('en-IN', options);
+    }
+  }
+
+  function handleReservation() {
+    const checkIn = document.getElementById('checkIn').value;
+    const checkOut = document.getElementById('checkOut').value;
+    const adults = document.getElementById('adults').value;
+    const children = document.getElementById('children').value;
+    
+    if (!checkIn || !checkOut) { alert("Please select dates"); return; }
+    
+    document.getElementById('confirmDetails').innerHTML = `
+        <div class="mb-1"><strong>Dates:</strong> ${checkIn} — ${checkOut}</div>
+        <div><strong>Guests:</strong> ${adults} Adults, ${children} Children</div>
+        <div class="mt-2 text-danger fw-bold">Total: ${document.getElementById('modalFinalTotal').innerText}</div>
+    `;
+    document.getElementById('customConfirmModal').style.display = 'flex';
+  }
+
+  // --- INITIALIZATION ---
   document.addEventListener('DOMContentLoaded', function() {
+    const checkIn = document.getElementById('checkIn');
+    const checkOut = document.getElementById('checkOut');
+
+    const today = new Date().toISOString().split('T')[0];
+    checkIn.setAttribute('min', today);
+
+    function validateDates() {
+      if (!checkIn.value) return;
+      const checkInDate = new Date(checkIn.value);
+      const nextDay = new Date(checkInDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const minCheckOutString = nextDay.toISOString().split('T')[0];
+      
+      checkOut.setAttribute('min', minCheckOutString);
+      if (new Date(checkOut.value) <= checkInDate) {
+        checkOut.value = minCheckOutString;
+      }
+      
+      updateCancellationWindow();
+      updatePriceBreakdown(); 
+    }
+
+    checkIn.addEventListener('change', validateDates);
+    checkOut.addEventListener('change', updatePriceBreakdown);
+    
+    validateDates(); // Initial run
+
+    // --- MAP ---
     <% if (listing.lat && listing.lng) { %>
       const map = L.map('map', { scrollWheelZoom: true }).setView([<%= listing.lat %>, <%= listing.lng %>], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
       const icon = L.divIcon({
         className: 'custom-marker',
         html: "<div style='background-color:#ff385c; width:22px; height:22px; border-radius:50%; border:3px solid white; box-shadow:0 0 5px rgba(0,0,0,0.3)'></div>",
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       });
-
       L.marker([<%= listing.lat %>, <%= listing.lng %>], { icon: icon }).addTo(map);
       setTimeout(() => { map.invalidateSize(); }, 400);
     <% } %>
