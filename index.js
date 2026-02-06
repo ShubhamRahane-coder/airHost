@@ -141,7 +141,7 @@ app.post("/login", asyncWrap(async (req, res) => {
         return res.redirect("/login");
     }
     req.session.userId = user._id;
-    req.flash("success", "Welcome back!");
+    req.flash("success", `Welcome back, ${user.username}!`);
     res.redirect("/");
 }));
 
