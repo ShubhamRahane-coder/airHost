@@ -424,7 +424,7 @@
 
     // --- MAP ---
     <% if (listing.lat && listing.lng) { %>
-      const map = L.map('map', { scrollWheelZoom: true }).setView([<%= listing.lat %>, <%= listing.lng %>], 13);
+      const map = L.map('map', { scrollWheelZoom: true }).setView([<%= listing.lat %>, <%= listing.lng %>], 8);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
       const icon = L.divIcon({
         className: 'custom-marker',

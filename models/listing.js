@@ -123,11 +123,30 @@ const listingSchema = new Schema(
       min: [0, "Service fee percent cannot be negative"],
       max: [100, "Service fee cannot exceed 100%"]
     },
-    category: {
+    badgesCategory: { // Fixed spelling here
     type: String,
-    enum: ["Rooms", "Hotels", "Entire Home", "Cabins", "Luxe"], 
-    required: true
-}
+    enum: [
+        "Standard",
+        "Premium",
+        "Budget",
+        "Luxury",
+        "Trending",
+        "Popular",
+        "New",
+        "Top Rated",
+        "Featured",
+        "Iconic",
+        "", // Allows "None"
+    ],
+    required: false,
+    default: "Standard",
+},
+category: { // Stay Type
+    type: String,
+    enum: ["Rooms", "Hotels", "Entire Home", "Cabins", "Luxe"],
+    required: true,
+    default: "Rooms",
+},
   },
   {
     timestamps: true,

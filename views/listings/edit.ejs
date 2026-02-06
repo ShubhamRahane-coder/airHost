@@ -43,26 +43,52 @@
              value="<%= listing.title %>" placeholder="e.g. Modern Loft in the City Center" required>
       <div class="invalid-feedback">Please provide a catchy title.</div>
     </div>
-    <div class="col-md-4">
-      <label for="category" class="form-label air-label">Listing Type</label>
-      <select name="listing[category]" id="category" class="form-select air-input" required onchange="updateCategoryHint()">
-        <option value="" disabled>Choose a type...</option>
-        
-        <optgroup label="Stay Styles">
-          <option value="Rooms" <%= listing.category === 'Rooms' ? 'selected' : '' %>>🛏️ Private Rooms</option>
-          <option value="Hotels" <%= listing.category === 'Hotels' ? 'selected' : '' %>>🏨 Boutique Hotels</option>
-          <option value="Entire Home" <%= listing.category === 'Entire Home' ? 'selected' : '' %>>🏠 Entire Home</option>
-        </optgroup>
-        
-        <optgroup label="Nature & Unique">
-          <option value="Cabins" <%= listing.category === 'Cabins' ? 'selected' : '' %>>🏡 Cabins</option>
-          <option value="Luxe" <%= listing.category === 'Luxe' ? 'selected' : '' %>>✨ Luxe</option>
-        </optgroup>
-      </select>
-      <div id="category-hint" class="mt-2 p-2 rounded-3 bg-light border-start border-4 border-dark" style="font-size: 0.75rem; color: #555;">
-        Select a type to see its definition.
-      </div>
+<div class="row g-3">
+  <div class="col-md-8">
+    <label for="category" class="form-label air-label">Listing Type</label>
+    <select name="listing[category]" id="category" class="form-select air-input" required onchange="updateCategoryHint()">
+      <option value="" disabled <%= !listing.category ? 'selected' : '' %>>Choose a type...</option>
+      <optgroup label="Stay Styles">
+        <option value="Rooms" <%= listing.category === 'Rooms' ? 'selected' : '' %>>🛏️ Private Rooms</option>
+        <option value="Hotels" <%= listing.category === 'Hotels' ? 'selected' : '' %>>🏨 Boutique Hotels</option>
+        <option value="Entire Home" <%= listing.category === 'Entire Home' ? 'selected' : '' %>>🏠 Entire Home</option>
+      </optgroup>
+      <optgroup label="Nature & Unique">
+        <option value="Cabins" <%= listing.category === 'Cabins' ? 'selected' : '' %>>🏡 Cabins</option>
+        <option value="Luxe" <%= listing.category === 'Luxe' ? 'selected' : '' %>>✨ Luxe</option>
+      </optgroup>
+    </select>
+    <div id="category-hint" class="mt-2 p-2 rounded-3 bg-light border-start border-4 border-dark" style="font-size: 0.75rem; color: #555;">
+      Select a type to see its definition.
     </div>
+  </div>
+
+  <% 
+    // Ensuring we check both naming conventions to prevent "not defined" errors
+    const activeUser = (typeof currUser !== 'undefined') ? currUser : (typeof currentUser !== 'undefined' ? currentUser : null); 
+  %>
+
+  <% if (activeUser && activeUser.role === "admin") { %>
+    <div class="col-md-4">
+      <label for="badgesCategory" class="form-label air-label">
+        <i class="fa-solid fa-shield-check text-primary me-1"></i> Admin Badge
+      </label>
+      <select name="listing[badgesCategory]" id="badgesCategory" class="form-select air-input">
+        <option value="" <%= (!listing || !listing.badgesCategory) ? 'selected' : '' %>>None</option>
+        <% 
+          const badges = ["Standard", "Premium", "Budget", "Luxury", "Trending", "Popular", "New", "Top Rated", "Featured", "Iconic"]; 
+          badges.forEach(badge => { 
+        %>
+          <option value="<%= badge %>" <%= (listing && listing.badgesCategory === badge) ? 'selected' : '' %>>
+            <%= badge %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+  <% } else { %>
+    <input type="hidden" name="listing[badgesCategory]" value="<%= (listing && listing.badgesCategory) ? listing.badgesCategory : 'Standard' %>">
+  <% } %>
+</div>
   </div>
 </section>
 
@@ -123,21 +149,45 @@
           </div>
         </section>
 
-        <section>
-          <h6 class="section-title">4. Location Details</h6>
-          <div class="row g-3">
-            <div class="col-md-8">
-              <label for="location" class="form-label air-label">City/State</label>
-              <input id="location" name="listing[location]" type="text" class="form-control air-input" 
-                     value="<%= listing.location %>" placeholder="e.g. Mumbai, Maharashtra" required>
-            </div>
-            <div class="col-md-4">
-              <label for="country" class="form-label air-label">Country</label>
-              <input id="country" name="listing[country]" type="text" class="form-control air-input" 
-                     value="<%= listing.country %>" placeholder="India" required>
-            </div>
-          </div>
-        </section>
+       <section>
+  <h6 class="section-title">4. Location & Coordinates</h6>
+  <div class="row g-3">
+    <div class="col-md-8">
+      <label for="location" class="form-label air-label">City/State</label>
+      <input id="location" name="listing[location]" type="text" class="form-control air-input" 
+             placeholder="e.g. Mumbai, Maharashtra" required 
+             value="<%= (typeof listing !== 'undefined' && listing.location) ? listing.location : '' %>">
+      <div class="invalid-feedback">Please provide a location.</div>
+    </div>
+
+    <div class="col-md-4">
+      <label for="country" class="form-label air-label">Country</label>
+      <input id="country" name="listing[country]" type="text" class="form-control air-input" 
+             placeholder="India" required 
+             value="<%= (typeof listing !== 'undefined' && listing.country) ? listing.country : 'India' %>">
+    </div>
+
+    <div class="col-md-6">
+      <label for="lat" class="form-label air-label">
+        <i class="fa-solid fa-location-crosshairs text-muted me-1"></i> Latitude
+      </label>
+      <input id="lat" name="listing[lat]" type="number" step="any" class="form-control air-input" 
+             placeholder="e.g. 18.8797" 
+             value="<%= (typeof listing !== 'undefined' && listing.lat) ? listing.lat : '18.8797' %>">
+      <div class="form-text extra-small" style="color: #aaa;">Used for precise map placement</div>
+    </div>
+
+    <div class="col-md-6">
+      <label for="lng" class="form-label air-label">
+        <i class="fa-solid fa-location-crosshairs text-muted me-1"></i> Longitude
+      </label>
+      <input id="lng" name="listing[lng]" type="number" step="any" class="form-control air-input" 
+             placeholder="e.g. 72.1402" 
+             value="<%= (typeof listing !== 'undefined' && listing.lng) ? listing.lng : '72.1402' %>">
+      <div class="form-text extra-small" style="color: #aaa;">Used for precise map placement</div>
+    </div>
+  </div>
+</section>
 
         <section>
           <h6 class="section-title">5. Essentials & Features</h6>

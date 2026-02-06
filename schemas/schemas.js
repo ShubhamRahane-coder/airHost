@@ -9,6 +9,12 @@ export const userRegisterSchema = Joi.object({
   password: Joi.string().min(6).required(),
 });
 
+
+
+
+
+
+
 // ========================
 // LISTING SCHEMA
 // ========================
@@ -22,9 +28,20 @@ export const listingSchema = Joi.object({
     location: Joi.string().required(),
     country: Joi.string().required(),
     
-    // Categorization
+    // 1. The Stay Style (Rooms, Hotels, etc.)
     category: Joi.string()
-      .valid("Standard", "Premium", "Trending", "Iconic")
+      .valid("Rooms", "Hotels", "Entire Home", "Cabins", "Luxe")
+      .required(),
+
+    // 2. The Admin Badge (Standard, Premium, etc.)
+    // We ADD this here to fix the "is not allowed" error
+    badgesCategory: Joi.string()
+      .valid(
+        "Standard", "Premium", "Budget", "Luxury", 
+        "Trending", "Popular", "New", "Top Rated", 
+        "Featured", "Iconic", ""
+      )
+      .allow("", null)
       .default("Standard"),
     
     guests: Joi.number().min(1).required(),
@@ -34,12 +51,9 @@ export const listingSchema = Joi.object({
       filename: Joi.string().allow("", null).optional(),
     }).optional(),
     
-    // Fees
     cleaningFee: Joi.number().min(0).allow("", null).default(0),
     serviceFeePct: Joi.number().min(0).max(100).allow("", null).default(3),
     
-    // AMENITIES OBJECT
-    // This allows the nested object we created in the EJS form
     amenities: Joi.object({
       wifi: Joi.boolean().default(false),
       ac: Joi.boolean().default(false),
@@ -52,11 +66,15 @@ export const listingSchema = Joi.object({
       cctv: Joi.boolean().default(false),
     }).optional(),
 
-    // Map Coordinates
     lat: Joi.number().allow("", null).optional(),
     lng: Joi.number().allow("", null).optional(),
   }).required(),
 });
+
+
+
+
+
 
 // ========================
 // REVIEW SCHEMA

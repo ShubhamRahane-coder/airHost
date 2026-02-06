@@ -72,6 +72,9 @@ app.use(asyncWrap(async (req, res, next) => {
     res.locals.error = e.length > 0 ? e : null;
     next();
 }));
+
+
+
 // ================= HELPERS =================
 // ================= HELPERS & FIXES =================
 const isLoggedIn = (req, res, next) => {
