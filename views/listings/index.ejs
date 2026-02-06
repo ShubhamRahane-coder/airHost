@@ -5,7 +5,7 @@
         <h2 class="fw-bold h4">Explore Stays</h2>
     </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
         <% for(let listing of listings) { %>
             <div class="col d-flex">
                 <a href="/listings/<%= listing._id %>" class="listing-link w-100">
@@ -132,4 +132,24 @@
     @media (max-width: 576px) {
         .img-container { aspect-ratio: 3 / 2; }
     }
+/* Force exactly 2 columns on mobile (below 576px) */
+@media (max-width: 575px) {
+    .row-cols-2 > * {
+        flex: 0 0 auto;
+        width: 50% !important;
+    }
+    
+    /* Reduce padding/font size for mobile so 2 cards fit nicely */
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.75rem !important;
+    }
+}
+
+
+
+
 </style>
