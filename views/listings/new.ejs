@@ -24,7 +24,7 @@
         <section>
           <h6 class="section-title">1. Property Identity</h6>
           <div class="row g-3">
-            <div class="col-md-8">
+            <div class="col-md-12">
               <label for="title" class="form-label air-label">Property Title</label>
               <input id="title" name="listing[title]" type="text" class="form-control air-input" 
                      placeholder="e.g. Modern Loft in the City Center" required>
@@ -68,7 +68,7 @@
 </div>
         </section>
 
-        <section>
+        <section id="Pricing_Capacity_input">
           <h6 class="section-title">2. Pricing & Capacity</h6>
           <div class="row g-4">
             <div class="col-md-4">
@@ -155,8 +155,7 @@
         <i class="fa-solid fa-location-crosshairs text-muted me-1"></i> Longitude
       </label>
       <input id="lng" name="listing[lng]" type="number" step="any" class="form-control air-input" 
-             placeholder="e.g. 72.1402" 
-          ">
+             placeholder="e.g. 72.1402" >
       <div class="form-text extra-small" style="color: #aaa;">Used for precise map placement</div>
     </div>
   </div>
@@ -203,7 +202,7 @@
   .air-label { font-size: 0.88rem; color: #222; margin-bottom: 8px; font-weight: 600 !important; display: block; }
   .extra-small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; }
   .air-input { border-radius: 12px !important; padding: 12px 18px; border: 1px solid #b0b0b0; background: #fff; transition: all 0.3s ease; font-size: 0.95rem; }
-  .air-input:focus { border-color: var(--air-black); box-shadow: 0 0 0 1px var(--air-black); outline: none; }
+  .air-input:focus {  border-color: var(--air-black); box-shadow: 0 0 0 1px var(--air-black); outline: none; }
   .air-input-group { border-radius: 12px 0 0 12px !important; border: 1px solid #b0b0b0; background-color: #f8f9fa; font-weight: bold; }
   .custom-switch .form-check-input:checked { background-color: var(--air-red); border-color: var(--air-red); }
   .btn-launch { background: radial-gradient(circle at center, #FF385C 0%, #E61E4D 100%); color: #fff; border: none; transition: 0.4s; }
@@ -212,6 +211,15 @@
   .input-group input{ 
     border-top-left-radius: 0px !important;
     border-bottom-left-radius: 0 !important;
+}
+/* 1. Remove focus effects for inputs inside this specific section */
+#Pricing_Capacity_input .air-input:focus, 
+#Pricing_Capacity_input .air-input:active,
+#Pricing_Capacity_input .form-control.air-input:focus {
+    border-color: #b0b0b0 !important;   /* Keeps original grey */
+    box-shadow: none !important;        /* Removes blue/black glow */
+    outline: none !important;           /* Removes browser outline */
+    background-color: #fff !important;  /* Prevents slight grey shift on focus */
 }
 
 </style>
