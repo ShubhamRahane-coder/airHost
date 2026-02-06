@@ -12,7 +12,7 @@
             <div id="confirmDetails" class="text-start bg-light p-3 rounded-4 mb-4 small"></div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-light w-100 rounded-pill fw-bold" onclick="closeConfirmModal()">Cancel</button>
-                <button type="button" class="btn btn-air-primary w-100 rounded-pill fw-bold" onclick="finalSubmit()">Confirm</button>
+                <button type="button" class="btn btn-air-primary w-100 rounded-pill fw-bold" onclick="finalSubmit(event)">Confirm</button>
             </div>
         </div>
     </div>
@@ -325,7 +325,16 @@
   function openPriceModal() { document.getElementById('priceBreakdownModal').style.display = 'flex'; }
   function closePriceModal() { document.getElementById('priceBreakdownModal').style.display = 'none'; }
   function closeConfirmModal() { document.getElementById('customConfirmModal').style.display = 'none'; }
-  function finalSubmit() { document.getElementById('reservationForm').submit(); }
+  function finalSubmit() {
+    const confirmBtn = event.target; // Get the button that was clicked
+    // Prevent double clicking
+    if (confirmBtn.disabled) return; 
+    // Disable the button and change text to show progress
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+    // Submit the form
+    document.getElementById('reservationForm').submit();
+  }
 
   window.onclick = function(event) {
     const confirmModal = document.getElementById('customConfirmModal');
