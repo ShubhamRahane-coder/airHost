@@ -5,22 +5,21 @@
     
     <div class="mb-5 d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-3">
-        <a href="/listings<%= isEdit ? '/' + listing._id : '' %>" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:45px; height:45px;">
+        <a href="/listings" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:45px; height:45px;">
           <span class="material-symbols-outlined">arrow_back</span>
         </a>
         <div>
-          <h2 class="fw-bold mb-0"><%= isEdit ? 'Edit Your Space' : 'List Your Space' %></h2>
-          <p class="text-muted small mb-0">Property ID: <%= isEdit ? '#' + listing._id.toString().slice(-6).toUpperCase() : 'New Listing' %></p>
+          <h2 class="fw-bold mb-0">List Your Space</h2>
+          <p class="text-muted small mb-0">Step into the world of hosting</p>
         </div>
       </div>
       <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
-        <i class="fa-solid fa-circle-check text-success me-1"></i> Details Verification
+        <i class="fa-solid fa-plus text-primary me-1"></i> Creation Mode
       </span>
     </div>
 
     <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
-      <form action="<%= isEdit ? `/listings/${listing._id}?_method=PUT` : '/listings/createListing' %>" method="POST"
-            class="d-flex flex-column gap-5 needs-validation" novalidate>
+      <form action="/listings" method="POST" class="d-flex flex-column gap-5 needs-validation" novalidate>
 
         <section>
           <h6 class="section-title">1. Property Identity</h6>
@@ -28,16 +27,26 @@
             <div class="col-md-8">
               <label for="title" class="form-label air-label">Property Title</label>
               <input id="title" name="listing[title]" type="text" class="form-control air-input" 
-                     value="<%= listing?.title || '' %>" placeholder="e.g. Modern Loft in the City Center" required>
+                     placeholder="e.g. Modern Loft in the City Center" required>
               <div class="invalid-feedback">Please provide a catchy title.</div>
             </div>
             <div class="col-md-4">
-              <label for="category" class="form-label air-label">Category</label>
-              <select name="listing[category]" id="category" class="form-select air-input">
-                <% ['Standard', 'Premium', 'Trending', 'Iconic'].forEach(cat => { %>
-                  <option value="<%= cat %>" <%= listing?.category === cat ? 'selected' : '' %>><%= cat %></option>
-                <% }) %>
+              <label for="category" class="form-label air-label">Listing Type</label>
+              <select name="listing[category]" id="category" class="form-select air-input" required onchange="updateCategoryHint()">
+                <option value="" disabled selected>Choose a type...</option>
+                <optgroup label="Stay Styles">
+                  <option value="Rooms">🛏️ Private Rooms</option>
+                  <option value="Hotels">🏨 Boutique Hotels</option>
+                  <option value="Entire Home">🏠 Entire Home</option>
+                </optgroup>
+                <optgroup label="Nature & Unique">
+                  <option value="Cabins">🏡 Cabins</option>
+                  <option value="Luxe">✨ Luxe</option>
+                </optgroup>
               </select>
+              <div id="category-hint" class="mt-2 p-2 rounded-3 bg-light border-start border-4 border-dark" style="font-size: 0.75rem; color: #555;">
+                Select a type to see its definition.
+              </div>
             </div>
           </div>
         </section>
@@ -50,7 +59,7 @@
               <div class="input-group">
                 <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
                 <input id="price" name="listing[price]" type="number" class="form-control air-input border-start-0" 
-                       value="<%= listing?.price || '' %>" placeholder="0" required min="100">
+                       placeholder="0" required min="100">
               </div>
             </div>
             <div class="col-md-4">
@@ -58,13 +67,21 @@
               <div class="input-group">
                 <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
                 <input id="cleaningFee" name="listing[cleaningFee]" type="number" class="form-control air-input border-start-0" 
-                       value="<%= listing?.cleaningFee || 0 %>">
+                       value="0">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="serviceFeePct" class="form-label air-label">Service Fee (%)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">%</span>
+                <input id="serviceFeePct" name="listing[serviceFeePct]" type="number" class="form-control air-input border-start-0" 
+                       value="3" min="0" max="100">
               </div>
             </div>
             <div class="col-md-4">
               <label for="guests" class="form-label air-label">Max Guests</label>
               <input id="guests" name="listing[guests]" type="number" class="form-control air-input" 
-                     value="<%= listing?.guests || 1 %>" required min="1">
+                     value="1" required min="1">
             </div>
           </div>
         </section>
@@ -74,9 +91,9 @@
           <div class="mb-4">
             <label for="image" class="form-label air-label">Cover Image URL</label>
             <input id="image" name="listing[image][url]" type="text" class="form-control air-input" 
-                   value="<%= listing?.image?.url || '' %>" placeholder="Paste high-quality image URL..." required>
+                   placeholder="Paste high-quality image URL..." required>
             
-            <div id="image-preview-container" class="mt-3 rounded-4 overflow-hidden border d-none position-relative" style="height: 250px;">
+            <div id="image-preview-container" class="mt-3 rounded-4 overflow-hidden border position-relative d-none" style="height: 250px;">
                 <img id="image-preview" src="" class="w-100 h-100 object-fit-cover" alt="Preview">
                 <div class="position-absolute bottom-0 start-0 w-100 p-2 bg-dark bg-opacity-50 text-white small text-center">Live Preview</div>
             </div>
@@ -84,7 +101,7 @@
           <div>
             <label for="description" class="form-label air-label">About the space</label>
             <textarea id="description" name="listing[description]" class="form-control air-input" 
-                      style="min-height:150px;" required placeholder="Share what makes your place special..."><%= listing?.description || '' %></textarea>
+                      style="min-height:150px;" required placeholder="Share what makes your place special..."></textarea>
           </div>
         </section>
 
@@ -94,12 +111,12 @@
             <div class="col-md-8">
               <label for="location" class="form-label air-label">City/State</label>
               <input id="location" name="listing[location]" type="text" class="form-control air-input" 
-                     value="<%= listing?.location || '' %>" placeholder="e.g. Mumbai, Maharashtra" required>
+                     placeholder="e.g. Mumbai, Maharashtra" required>
             </div>
             <div class="col-md-4">
               <label for="country" class="form-label air-label">Country</label>
               <input id="country" name="listing[country]" type="text" class="form-control air-input" 
-                     value="<%= listing?.country || '' %>" placeholder="India" required>
+                     placeholder="India" required>
             </div>
           </div>
         </section>
@@ -113,8 +130,7 @@
               <% amenityKeys.forEach(key => { %>
                 <div class="col-6 col-md-4">
                   <div class="form-check form-switch custom-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" name="listing[amenities][<%= key %>]" 
-                           id="<%= key %>" <%= listing?.amenities?.[key] ? 'checked' : '' %>>
+                    <input class="form-check-input" type="checkbox" role="switch" name="listing[amenities][<%= key %>]" id="<%= key %>">
                     <label class="form-check-label small text-white-50" for="<%= key %>">
                       <%= key === 'wifi' ? 'Fast Wi-Fi' : key.toUpperCase() %>
                     </label>
@@ -126,9 +142,9 @@
         </section>
 
         <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
-          <a href="/listings<%= isEdit ? '/' + listing._id : '' %>" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
+          <a href="/listings" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
           <button type="submit" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
-            <%= isEdit ? 'Update My Listing' : 'Launch My Listing' %>
+            Launch My Listing
           </button>
         </div>
 
@@ -138,60 +154,46 @@
 </div>
 
 <style>
-  :root {
-    --air-red: #ff385c;
-    --air-black: #222222;
-  }
-
+  :root { --air-red: #ff385c; --air-black: #222222; }
   .listing-form-wrapper { background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%); min-height: 100vh; }
   .rounded-5 { border-radius: 1.5rem !important; }
-
-  /* Section Headers with Line Decoration */
-  .section-title { 
-    font-weight: 800; text-transform: uppercase; color: #b0b0b0; font-size: 0.7rem; 
-    letter-spacing: 2px; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 15px; 
-  }
+  .section-title { font-weight: 800; text-transform: uppercase; color: #b0b0b0; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 15px; }
   .section-title::after { content: ""; height: 1px; flex-grow: 1; background: #e0e0e0; }
-
   .air-label { font-size: 0.88rem; color: #222; margin-bottom: 8px; font-weight: 600 !important; display: block; }
   .extra-small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; }
-
-  /* Premium Inputs */
-  .air-input { 
-    border-radius: 12px !important; padding: 12px 18px; border: 1px solid #b0b0b0; 
-    background: #fff; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.95rem;
-  }
+  .air-input { border-radius: 12px !important; padding: 12px 18px; border: 1px solid #b0b0b0; background: #fff; transition: all 0.3s ease; font-size: 0.95rem; }
   .air-input:focus { border-color: var(--air-black); box-shadow: 0 0 0 1px var(--air-black); outline: none; }
-
   .air-input-group { border-radius: 12px 0 0 12px !important; border: 1px solid #b0b0b0; background-color: #f8f9fa; font-weight: bold; }
-
-  /* Switches */
-  .custom-switch .form-check-input { width: 2.8em !important; height: 1.4em !important; cursor: pointer; }
   .custom-switch .form-check-input:checked { background-color: var(--air-red); border-color: var(--air-red); }
-
-  /* Launch Button */
-  .btn-launch { 
-    background: radial-gradient(circle at center, #FF385C 0%, #E61E4D 100%);
-    color: #fff; border: none; transition: all 0.4s ease;
-  }
-  .btn-launch:hover { transform: scale(1.01); box-shadow: 0 10px 20px rgba(230, 30, 77, 0.25); color: #fff; filter: brightness(1.1); }
-
-  /* Preview Container */
+  .btn-launch { background: radial-gradient(circle at center, #FF385C 0%, #E61E4D 100%); color: #fff; border: none; transition: 0.4s; }
+  .btn-launch:hover { transform: scale(1.01); box-shadow: 0 10px 20px rgba(230, 30, 77, 0.25); color: #fff; }
   #image-preview-container { border: 2px dashed #ddd; background: #fafafa; }
-
-  .was-validated .form-control:invalid { border-color: #c13515 !important; }
-  .was-validated .form-control:valid { border-color: #008a05 !important; }
 </style>
 
 <script>
+  const categoryHints = {
+    "Rooms": "A private room in a home, plus access to shared spaces.",
+    "Hotels": "A professional hospitality stay, including boutique hotels.",
+    "Entire Home": "Guests have the whole place to themselves. Includes a kitchen.",
+    "Cabins": "Secluded, rustic homes usually located in woods or rural areas.",
+    "Luxe": "High-end architecture and top-tier service."
+  };
+
+  function updateCategoryHint() {
+    const select = document.getElementById('category');
+    const hintDiv = document.getElementById('category-hint');
+    if (categoryHints[select.value]) {
+      hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[select.value]}`;
+    }
+  }
+
   (() => {
     'use strict'
     const imgInput = document.getElementById('image');
     const preview = document.getElementById('image-preview');
     const previewContainer = document.getElementById('image-preview-container');
 
-    // Live Image Preview Function
-    const updatePreview = () => {
+    imgInput.addEventListener('input', () => {
       const url = imgInput.value.trim();
       if(url !== "") {
         preview.src = url;
@@ -199,22 +201,17 @@
       } else {
         previewContainer.classList.add('d-none');
       }
-    }
+    });
 
-    // Event Listeners for Preview
-    imgInput.addEventListener('input', updatePreview);
-    window.addEventListener('load', updatePreview);
-
-    // Bootstrap Validation
     const forms = document.querySelectorAll('.needs-validation')
     Array.from(forms).forEach(form => {
       form.addEventListener('submit', event => {
         if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
+          event.preventDefault();
+          event.stopPropagation();
         }
-        form.classList.add('was-validated')
-      }, false)
-    })
+        form.classList.add('was-validated');
+      }, false);
+    });
   })()
 </script>
