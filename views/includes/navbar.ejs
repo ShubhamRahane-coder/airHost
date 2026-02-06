@@ -63,9 +63,10 @@
 
 
 
-          <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
-            <span class="material-symbols-outlined text-white">search</span>
-          </button>
+          <button type="submit" id="searchBtnDesktop" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+  <span class="material-symbols-outlined text-white" id="searchIconDesktop">search</span>
+  <span id="searchSpinnerDesktop" class="spinner-border spinner-border-sm text-white d-none" role="status"></span>
+</button>
         </div>
       </div>
     </form>
@@ -111,13 +112,20 @@
           <a href="/help" class="dropdown-link"><span class="material-symbols-outlined me-3">support_agent</span>Help Centre</a>
           <a href="/host/guidance" class="dropdown-link"><span class="material-symbols-outlined me-3">follow_the_signs</span>Host Guidance</a>
           <% if (currentUser) { %>
+            <% if (currentUser && currentUser.role === 'admin') { %>
+  <a href="/admin/dashboard" class="dropdown-link">
+    <span class="material-symbols-outlined me-3">settings_account_box</span>
+        admin controller
+  </a>
+<% } %>
+
           <hr class="dropdown-divider">
           <a href="/logout" class="btn btn-air-danger w-100 py-2">Logout</a>
           <% } %>
         </div>
       </li>
       <li class="nav-item d-lg-none">
-        <button class="btn rounded-circle nav_btn_third" id="mobileMenuBtn">
+       <button class="btn rounded-circle nav_btn_third" id="mobileMenuBtn" style="width: 44px; height: 44px;display: flex;  align-items: center; justify-content: center;">
           <span class="material-symbols-outlined">menu_open</span>
         </button>
       </li>
@@ -180,8 +188,9 @@
 
 
           <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center ml-4" style="width:40px;height:40px;">
-            <span class="material-symbols-outlined text-white" style="font-size: 20px;">search</span>
-          </button>
+  <span class="material-symbols-outlined text-white" style="font-size: 20px;">search</span>
+  <span class="spinner-border spinner-border-sm text-white d-none" role="status" style="width: 1.2rem; height: 1.2rem;"></span>
+</button>
         </div>
       </div>
     </div>
@@ -256,39 +265,37 @@ document.addEventListener("DOMContentLoaded", function () {
   const mobileMenu = document.getElementById("mobileMenu");
   const mainNav = document.getElementById("mainNav");
 
-  // Helper to hide only date/guest pickers
+  // --- 1. UI UI HELPERS ---
   const hidePickers = () => {
     document.querySelectorAll('.date-picker, .guest-picker').forEach(el => el.classList.add('d-none'));
   };
 
   /* ACCOUNT DROPDOWN */
-  accountBtn.addEventListener("click", e => {
-    e.stopPropagation();
-    hidePickers();
-    
-    // HIDE Search Menu if opening Account
-    mobileMenu.classList.add("d-none");
-    mainNav.classList.add("border-bottom");
-    
-    accountDropdown.classList.toggle("d-none");
-  });
-
-  /* MOBILE SEARCH MENU TOGGLE */
-  mobileMenuBtn.addEventListener("click", e => {
-    e.stopPropagation();
-    
-    // HIDE Account Dropdown if opening Search
-    accountDropdown.classList.add("d-none");
-    
-    const isHidden = mobileMenu.classList.contains("d-none");
-    if (isHidden) {
-      mobileMenu.classList.remove("d-none");
-      mainNav.classList.remove("border-bottom");
-    } else {
+  if (accountBtn) {
+    accountBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      hidePickers();
       mobileMenu.classList.add("d-none");
       mainNav.classList.add("border-bottom");
-    }
-  });
+      accountDropdown.classList.toggle("d-none");
+    });
+  }
+
+  /* MOBILE SEARCH MENU TOGGLE */
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      accountDropdown.classList.add("d-none");
+      const isHidden = mobileMenu.classList.contains("d-none");
+      if (isHidden) {
+        mobileMenu.classList.remove("d-none");
+        mainNav.classList.remove("border-bottom");
+      } else {
+        mobileMenu.classList.add("d-none");
+        mainNav.classList.add("border-bottom");
+      }
+    });
+  }
 
   /* PICKERS LOGIC (Desktop & Mobile) */
   const setupPicker = (btnId, pickerSelector) => {
@@ -296,10 +303,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!btn) return;
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      
-      // HIDE Account Dropdown if any search picker is opened
       accountDropdown.classList.add("d-none");
-      
       const picker = btn.parentElement.querySelector(pickerSelector);
       const isHidden = picker.classList.contains("d-none");
       hidePickers(); 
@@ -325,13 +329,43 @@ document.addEventListener("DOMContentLoaded", function () {
       hidePickers();
     }
   });
+
+  // --- 2. SEARCH FORM LOGIC (Merged & Cleaned) ---
+  const searchForms = document.querySelectorAll('form[action="/listings/find"]');
+  
+  searchForms.forEach(form => {
+    form.addEventListener("submit", function (e) {
+      const locationInput = this.querySelector('input[name="location"]');
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const searchIcon = submitBtn.querySelector('.material-symbols-outlined');
+      const spinner = submitBtn.querySelector('.spinner-border');
+      
+      // Validation: Prevent empty search
+      if (!locationInput.value.trim()) {
+        e.preventDefault(); 
+        locationInput.focus();
+        locationInput.style.borderBottom = "2px solid #ff385c"; 
+        
+        setTimeout(() => {
+          locationInput.style.borderBottom = "none";
+        }, 2000);
+        return; 
+      }
+
+      // Valid: Trigger loading state
+      submitBtn.disabled = true; 
+      if (searchIcon) searchIcon.classList.add('d-none');
+      if (spinner) spinner.classList.remove('d-none');
+    });
+  });
 });
 
-/* COUNTER FUNCTIONS */
+// --- 3. GUEST COUNTER FUNCTIONS (Global Scope) ---
 function updateGuestCount(id, delta) {
   const input = document.getElementById(id);
+  if (!input) return;
   const currentValue = parseInt(input.value) || 0;
-  const min = parseInt(input.getAttribute('min'));
+  const min = parseInt(input.getAttribute('min')) || 0;
   const newValue = currentValue + delta;
   if (newValue >= min) {
     input.value = newValue;
@@ -340,41 +374,14 @@ function updateGuestCount(id, delta) {
 
 function stepMobile(id, delta) {
   const input = document.getElementById(id);
+  if (!input) return;
   const val = parseInt(input.value) || 0;
-  const min = parseInt(input.min);
+  const min = parseInt(input.min) || 0;
   const newVal = val + delta;
   if (newVal >= min) {
     input.value = newVal;
   }
 }
-
-
-
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  // ... your existing code ...
-
-  /* PREVENT EMPTY SEARCH */
-  const searchForms = document.querySelectorAll('form[action="/listings/find"]');
-  
-  searchForms.forEach(form => {
-    form.addEventListener("submit", function (e) {
-      const locationInput = this.querySelector('input[name="location"]');
-      
-      // If location is empty or only contains spaces
-      if (!locationInput.value.trim()) {
-        e.preventDefault(); // Stop the form from searching
-        locationInput.focus();
-        locationInput.style.borderBottom = "2px solid #ff385c"; // Optional: Highlight error
-        
-        // Remove error highlight after 2 seconds
-        setTimeout(() => {
-          locationInput.style.borderBottom = "none";
-        }, 2000);
-      }
-    });
-  });
-});
 </script>
+
+

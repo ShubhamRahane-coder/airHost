@@ -212,9 +212,10 @@
 
         <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
           <a href="/listings/<%= listing._id %>" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
-          <button type="submit" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
-            Update My Listing
-          </button>
+          <button type="submit" id="submitBtn" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
+  <span id="btnText">Update My Listing</span>
+  <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+</button>
         </div>
 
       </form>
@@ -269,71 +270,104 @@
 </style>
 
 <script>
-const categoryHints = {
-  "Rooms": "A private room in a home, plus access to shared spaces.",
-  "Hotels": "A professional hospitality stay, including boutique hotels or hostels.",
-  "Entire Home": "Guests have the whole place to themselves. Usually includes a kitchen.",
-  "Cabins": "Secluded, rustic homes usually located in woods or rural areas.",
-  "Luxe": "High-end architecture, premium amenities, and top-tier service.",
-  "Trending": "Properties with unique design or high demand this season."
-};
+  // 1. Category Definitions
+  const categoryHints = {
+    "Rooms": "A private room in a home, plus access to shared spaces.",
+    "Hotels": "A professional hospitality stay, including boutique hotels or hostels.",
+    "Entire Home": "Guests have the whole place to themselves. Usually includes a kitchen.",
+    "Cabins": "Secluded, rustic homes usually located in woods or rural areas.",
+    "Luxe": "High-end architecture, premium amenities, and top-tier service.",
+    "Trending": "Properties with unique design or high demand this season."
+  };
 
-function updateCategoryHint() {
-  const select = document.getElementById('category');
-  const hintDiv = document.getElementById('category-hint');
-  const selectedValue = select.value;
-  
-  if (categoryHints[selectedValue]) {
-    hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[selectedValue]}`;
-  }
-}
-
-// Init logic
-window.addEventListener('DOMContentLoaded', updateCategoryHint);
-
-(() => {
-  'use strict'
-  const imgInput = document.getElementById('image');
-  const preview = document.getElementById('image-preview');
-  const previewContainer = document.getElementById('image-preview-container');
-
-  const updatePreview = () => {
-    const url = imgInput.value.trim();
-    if(url !== "") {
-      preview.src = url;
-      previewContainer.classList.remove('d-none');
-    } else {
-      previewContainer.classList.add('d-none');
+  // 2. Global Category Hint Function (needed for the onchange attribute in HTML)
+  function updateCategoryHint() {
+    const select = document.getElementById('category');
+    const hintDiv = document.getElementById('category-hint');
+    if (hintDiv && select && categoryHints[select.value]) {
+      hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[select.value]}`;
     }
   }
 
-  imgInput.addEventListener('input', updatePreview);
-  window.addEventListener('load', updatePreview);
+  // 3. Main Logic Wrapper
+  (() => {
+    'use strict'
 
-  const forms = document.querySelectorAll('.needs-validation')
-  Array.from(forms).forEach(form => {
-    form.addEventListener('submit', event => {
-      if (!form.checkValidity()) {
-        event.preventDefault()
-        event.stopPropagation()
+    // Element Selection
+    const form = document.querySelector('.needs-validation');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const imgInput = document.getElementById('image');
+    const preview = document.getElementById('image-preview');
+    const previewContainer = document.getElementById('image-preview-container');
+    const priceInput = document.getElementById('price');
+    const serviceFeeInput = document.getElementById('serviceFee'); // Your specific fee field
+    const SERVICE_FEE_PCT = 0.03; // 3% Platform Fee
+
+    // --- FEE CALCULATION LOGIC ---
+    const calculateFees = () => {
+      if (priceInput && serviceFeeInput) {
+        const price = parseFloat(priceInput.value) || 0;
+        const calculatedFee = Math.round(price * SERVICE_FEE_PCT);
+        serviceFeeInput.value = calculatedFee;
       }
-      form.classList.add('was-validated')
-    }, false)
-  })
-})()
-const priceInput = document.getElementById('price');
-const serviceFeeInput = document.getElementById('serviceFee');
-const SERVICE_FEE_PCT = 0.03; // 3% Platform Fee
+    };
 
-function calculateFees() {
-    const price = parseFloat(priceInput.value) || 0;
-    const calculatedFee = Math.round(price * SERVICE_FEE_PCT);
-    serviceFeeInput.value = calculatedFee;
-}
+    // --- IMAGE PREVIEW LOGIC ---
+    const updatePreview = () => {
+      if (imgInput && preview && previewContainer) {
+        const url = imgInput.value.trim();
+        if (url !== "") {
+          preview.src = url;
+          previewContainer.classList.remove('d-none');
+        } else {
+          previewContainer.classList.add('d-none');
+        }
+      }
+    };
 
-// Listen for price changes
-priceInput.addEventListener('input', calculateFees);
+    // --- FORM SUBMISSION & VALIDATION LOGIC ---
+    if (form) {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          form.classList.add('was-validated');
 
-// Run on page load to set initial value
-window.addEventListener('load', calculateFees);
+          // Smooth scroll to first error
+          const firstInvalid = form.querySelector(':invalid');
+          if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          // Valid form: Handle Loading State
+          if (submitBtn) {
+            submitBtn.disabled = true; 
+            if (btnText) btnText.innerText = "Updating...";
+            if (btnSpinner) btnSpinner.classList.remove('d-none');
+          }
+          // Form proceeds to submit normally
+        }
+      }, false);
+    }
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    imgInput?.addEventListener('input', updatePreview);
+    priceInput?.addEventListener('input', calculateFees);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateCategoryHint();
+      updatePreview();
+      calculateFees();
+    });
+
+    // Fallback for window load to ensure initial calculations
+    window.addEventListener('load', () => {
+      updatePreview();
+      calculateFees();
+    });
+
+  })();
 </script>

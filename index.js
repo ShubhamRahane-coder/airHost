@@ -75,7 +75,8 @@ app.use(asyncWrap(async (req, res, next) => {
 
 
 
-// ================= HELPERS =================
+// ================= mongoodh middleware to delete =================
+
 // ================= HELPERS & FIXES =================
 const isLoggedIn = (req, res, next) => {
     if (!req.session.userId) {
@@ -149,6 +150,121 @@ app.get("/logout", (req, res) => {
     req.session.destroy(() => res.redirect("/"));
 });
 
+// ================= admin dashborad  ROUTES =================
+// ================= ADMIN ROUTES =================
+
+// Middleware to check if user is an Admin
+const isAdmin = (req, res, next) => {
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Access Denied: Administrative privileges required.");
+        return res.redirect("/");
+    }
+    next();
+};
+
+// 1. ADMIN DASHBOARD - View all users
+app.get("/admin/dashboard", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
+    // We populate listings to show how many properties each user owns
+    const users = await User.find({}).sort({ createdAt: -1 });
+    res.render("admin/dashboard", { users, title: "Admin Panel | airHost" });
+}));
+
+// 2. INDIVIDUAL ACCESS FORM - Edit a specific user's role
+app.get("/admin/users/:id/edit", isLoggedIn, isAdmin, validateObjectId, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    
+    // We fetch the user AND fill the 'listings' array with actual property data
+    const user = await User.findById(id).populate("listings");
+    
+    if (!user) {
+        req.flash("error", "User not found.");
+        return res.redirect("/admin"); // Or wherever your dashboard lives
+    }
+
+    // Ensure the filename 'admin/edit' matches your actual .ejs filename
+    res.render("admin/edit", { 
+        user, 
+        title: `Edit Access: ${user.username}` 
+    });
+}));
+
+// 3. UPDATE USER ACCESS - Save changes to role/email
+// PUT Route to update user details
+app.put("/admin/users/:id", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    const { user: updatedData } = req.body;
+
+    // findByIdAndUpdate handles the mapping of the 'user' object from the form
+    const user = await User.findByIdAndUpdate(id, { ...updatedData }, { runValidators: true, new: true });
+
+    if (!user) {
+        req.flash("error", "User not found.");
+        return res.redirect("/admin");
+    }
+
+    req.flash("success", `Account for ${user.username} has been updated.`);
+    res.redirect("/admin"); 
+}));
+
+app.get("/admin/users/:id/stats", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    
+    // 1. Basic Counts & Identity
+    // We fetch email and createdAt here so we can send them to the modal
+    const user = await User.findById(id).select("username email createdAt");
+    const listings = await Listing.find({ owner: id });
+    const listingIds = listings.map(l => l._id);
+
+    const totalListings = listings.length;
+    const totalReviews = await Review.countDocuments({ 
+        $or: [{ author: id }, { listing: { $in: listingIds } }] 
+    });
+
+    // 2. CASH IN: What the user spent as a Guest
+    const userTrips = await Reservation.find({ guest: id, status: "Confirmed" });
+    const totalSpent = userTrips.reduce((acc, curr) => acc + curr.price, 0);
+
+    // 3. CASH OUT: What the user earned as a Host
+    const hostReservations = await Reservation.find({ listing: { $in: listingIds }, status: "Confirmed" });
+    const totalEarnings = hostReservations.reduce((acc, curr) => acc + curr.price, 0);
+
+    // 4. THE JSON RESPONSE
+    res.json({
+        username: user.username,
+        email: user.email,         // Added for the Modal Header
+        joinedAt: user.createdAt,  // Added for the Info Tab
+        totalListings,
+        totalReviews,
+        totalTrips: userTrips.length,
+        totalSpent: totalSpent.toLocaleString("en-IN"),
+        totalEarnings: totalEarnings.toLocaleString("en-IN")
+    });
+}));
+
+// 4. CASCADE DELETE - Remove user + their listings + their reviews
+app.delete("/admin/users/:id", isLoggedIn, isAdmin, validateObjectId, asyncWrap(async (req, res) => {
+    const { id } = req.params;
+    
+    // 1. SAFETY CHECK: Prevent self-deletion
+    // We compare the ID from the URL with the ID stored in the session
+    if (id === req.session.userId.toString()) {
+        req.flash("error", "Security Alert: You cannot delete the account you are currently logged into.");
+        return res.redirect("/admin/dashboard");
+    }
+
+    // 2. TRIGGER CASCADE DELETE
+    // This single line triggers UserSchema.post("findOneAndDelete") in models/user.js
+    // which then cleans up all Listings, Reviews, and Reservations automatically.
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+        req.flash("error", "User not found.");
+        return res.redirect("/admin/dashboard");
+    }
+
+    req.flash("success", `Account for ${deletedUser.username} and all linked properties/reviews have been purged.`);
+    res.redirect("/admin/dashboard");
+}));
 // ================= LISTING ROUTES =================
 
 app.get("/", asyncWrap(async (req, res) => {
@@ -277,22 +393,19 @@ app.delete("/listings/:id", isLoggedIn, validateObjectId, asyncWrap(async (req, 
     const { id } = req.params;
     const listing = await Listing.findById(id);
 
-    // 1. Quick Auth Check
+    // 1. Authorization Check
     const isAdmin = res.locals.currentUser?.role === "admin";
     if (!listing || (!listing.owner.equals(req.session.userId) && !isAdmin)) {
         req.flash("error", "Unauthorized or Listing not found.");
         return res.redirect("/");
     }
 
-    // 2. Fast Cleanup & Removal
-    // We combine the cleanup and listing removal into a parallel execution
-    await Promise.all([
-        Review.deleteMany({ _id: { $in: listing.reviews } }),
-        Reservation.deleteMany({ _id: { $in: listing.reservations } }),
-        Listing.findByIdAndDelete(id)
-    ]);
+    // 2. Simple Removal
+    // This triggers listingSchema.post("findOneAndDelete") in listing.js
+    // which automatically purges related Reviews and Reservations.
+    await Listing.findByIdAndDelete(id); 
     
-    req.flash("success", "Listing and all linked data removed.");
+    req.flash("success", "Listing and all associated data removed.");
     res.redirect("/");
 }));
 

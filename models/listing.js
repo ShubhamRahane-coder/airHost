@@ -153,4 +153,27 @@ category: { // Stay Type
   },
 );
 
+listingSchema.post("findOneAndDelete", async function (listing) {
+    if (listing) {
+        // Access models inside the middleware to avoid circular imports
+        const Review = mongoose.model("Review");
+        const Reservation = mongoose.model("Reservation");
+
+        // 1. Delete all reviews associated with this listing
+        if (listing.reviews.length > 0) {
+            await Review.deleteMany({ _id: { $in: listing.reviews } });
+        }
+
+        // 2. Delete all reservations associated with this listing
+        if (listing.reservations.length > 0) {
+            await Reservation.deleteMany({ _id: { $in: listing.reservations } });
+        }
+        
+        console.log(`Successfully cleaned up reviews and reservations for listing: ${listing.title}`);
+    }
+});
+
+
+
+
 export default mongoose.model("Listing", listingSchema);

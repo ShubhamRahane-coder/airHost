@@ -183,9 +183,10 @@
 
         <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
           <a href="/listings" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
-          <button type="submit" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
-            Launch My Listing
-          </button>
+          <button type="submit" id="submitBtn" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
+  <span id="btnText">Launch My Listing</span>
+  <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+</button>
         </div>
 
       </form>
@@ -225,6 +226,7 @@
 </style>
 
 <script>
+  // 1. Data for Category Hints
   const categoryHints = {
     "Rooms": "A private room in a home, plus access to shared spaces.",
     "Hotels": "A professional hospitality stay, including boutique hotels.",
@@ -236,36 +238,62 @@
   function updateCategoryHint() {
     const select = document.getElementById('category');
     const hintDiv = document.getElementById('category-hint');
-    if (categoryHints[select.value]) {
+    if (hintDiv && categoryHints[select.value]) {
       hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[select.value]}`;
     }
   }
 
+  // 2. Main Form Logic
   (() => {
     'use strict'
+    
+    // Select elements once to be used throughout the logic
+    const form = document.querySelector('.needs-validation');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
     const imgInput = document.getElementById('image');
     const preview = document.getElementById('image-preview');
     const previewContainer = document.getElementById('image-preview-container');
 
-    imgInput.addEventListener('input', () => {
-      const url = imgInput.value.trim();
-      if(url !== "") {
-        preview.src = url;
-        previewContainer.classList.remove('d-none');
-      } else {
-        previewContainer.classList.add('d-none');
-      }
-    });
+    // --- Image Preview Logic ---
+    if (imgInput) {
+      imgInput.addEventListener('input', () => {
+        const url = imgInput.value.trim();
+        if(url !== "") {
+          if (preview) preview.src = url;
+          if (previewContainer) previewContainer.classList.remove('d-none');
+        } else {
+          if (previewContainer) previewContainer.classList.add('d-none');
+        }
+      });
+    }
 
-    const forms = document.querySelectorAll('.needs-validation')
-    Array.from(forms).forEach(form => {
+    // --- Form Submission & Validation Logic ---
+    if (form) {
       form.addEventListener('submit', event => {
+        // Step 1: Check validation
         if (!form.checkValidity()) {
           event.preventDefault();
           event.stopPropagation();
+          
+          form.classList.add('was-validated');
+
+          // Step 2: Smooth scroll to the first error field
+          const firstInvalid = form.querySelector(':invalid');
+          if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          // Step 3: Logic for a valid form - Loading state
+          if (submitBtn) {
+            submitBtn.disabled = true; 
+            if (btnText) btnText.innerText = "Launching...";
+            if (btnSpinner) btnSpinner.classList.remove('d-none');
+          }
+          // Form proceeds to submit normally here
         }
-        form.classList.add('was-validated');
       }, false);
-    });
-  })()
+    }
+  })();
 </script>

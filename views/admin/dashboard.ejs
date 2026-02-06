@@ -1,0 +1,349 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="admin-panel-wrapper py-5 bg-light min-vh-100">
+  <div class="container" style="max-width: 1200px;">
+    
+    <div class="row mb-4 align-items-end">
+      <div class="col-md-6">
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-shield-halved me-2 text-danger"></i>Admin Center</h2>
+        <p class="text-muted mb-0">Platform oversight and user management</p>
+      </div>
+      <div class="col-md-6 mt-3 mt-md-0">
+        <div class="d-flex gap-2 justify-content-md-end">
+            <div class="search-box position-relative flex-grow-1" style="max-width: 300px;">
+                <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" id="userSearch" class="form-control ps-5 rounded-pill border-0 shadow-sm" placeholder="Search by name or email...">
+            </div>
+            <div class="bg-white px-4 py-2 rounded-pill shadow-sm border text-center">
+                <span class="extra-small text-muted me-2">Total Users</span>
+                <span class="fw-bold text-danger"><%= users.length %></span>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="userTable">
+          <thead class="bg-dark text-white">
+            <tr class="extra-small">
+              <th class="ps-4 py-3 border-0">USER IDENTITY</th>
+              <th class="border-0">ACCESS LEVEL</th>
+       
+              <th class="border-0">REGISTRATION</th>
+              <th class="text-end pe-4 border-0">ACTION</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white">
+            <% for(let user of users) { %>
+            <tr class="user-row">
+  <td class="ps-4 py-3">
+    <div class="d-flex align-items-center">
+      <div class="nav-avatar-circle me-3 shadow-sm" style="width: 42px; height: 42px; font-size: 0.9rem;">
+        <%= user.username.charAt(0).toUpperCase() %>
+      </div>
+      <div>
+        <div class="fw-bold text-dark mb-0"><%= user.username %></div>
+        <div class="text-muted x-small"><%= user.email %></div>
+      </div>
+    </div>
+  </td>
+  <td>
+  <div class="d-flex flex-row justify-content-start gap-1">
+    <button onclick="toggleRole('<%= user._id %>')" id="role-btn-<%= user._id %>" 
+            class="role-badge border-0 <%= user.role === 'admin' ? 'role-admin' : 'role-user' %>">
+      <i class="fa-solid fa-user-shield me-1"></i><%= user.role %>
+    </button>
+    
+    <button onclick="toggleStatus('<%= user._id %>')" id="status-btn-<%= user._id %>" 
+            class="status-badge border-0 <%= user.status === 'blocked' ? 'status-blocked' : 'status-active' %>">
+      <i class="fa-solid <%= user.status === 'blocked' ? 'fa-ban' : 'fa-check' %> me-1"></i>
+      <%= user.status %>
+    </button>
+  </div>
+</td>
+
+  <td class="text-dark fw-medium x-small">
+    <div class="d-flex flex-column">
+        <span><%= new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) %></span>
+        <span class="text-muted extra-small" style="font-size: 0.6rem;"><%= new Date(user.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %></span>
+    </div>
+  </td>
+  <td class="text-end pe-4">
+    <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+        <a href="/admin/users/<%= user._id %>/edit" class="btn btn-white btn-sm px-3 border-end">Edit</a>
+        <button class="btn btn-white btn-sm px-3 text-danger fw-bold" onclick="showPurgeModal('<%= user._id %>')">Purge</button>
+    </div>
+  </td>
+</tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-2xl rounded-5 overflow-hidden">
+      <div class="modal-header d-block p-0 border-0">
+        <div class="profile-cover bg-dark py-4 px-4 position-relative">
+          <button type="button" class="btn-close btn-close-white position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+          <div class="d-flex align-items-center mt-2">
+            <div id="modal-initial-circle" class="profile-avatar shadow-lg border border-3 border-white me-3"></div>
+            <div class="text-white">
+              <h4 class="fw-bold mb-0" id="modal-username"></h4>
+              <p class="x-small opacity-75 mb-0" id="modal-email"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 pt-3 bg-white">
+        <ul class="nav nav-pills nav-justified bg-light p-1 rounded-pill" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active rounded-pill x-small fw-bold py-2" data-bs-toggle="tab" data-bs-target="#tab-finance">FINANCIALS</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link rounded-pill x-small fw-bold py-2" data-bs-toggle="tab" data-bs-target="#tab-activity">ACTIVITY</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link rounded-pill x-small fw-bold py-2" data-bs-toggle="tab" data-bs-target="#tab-danger">PURGE</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="modal-body p-4 tab-content">
+        <div class="tab-pane fade show active" id="tab-finance">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="finance-card border p-3 rounded-4 shadow-sm bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="extra-small text-muted">Host Revenue (Rentals)</span>
+                            <i class="fa-solid fa-arrow-trend-up text-success"></i>
+                        </div>
+                        <h3 class="fw-bold text-success mb-0">₹<span id="modal-earned">0</span></h3>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="finance-card border p-3 rounded-4 shadow-sm bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="extra-small text-muted">User Spending (Travel)</span>
+                            <i class="fa-solid fa-wallet text-primary"></i>
+                        </div>
+                        <h3 class="fw-bold text-primary mb-0">₹<span id="modal-spent">0</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-center">
+                <p id="modal-joined-date" class="x-small text-muted mb-0"></p>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-activity">
+            <div class="activity-grid bg-light rounded-4 p-3 border">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted small">Properties Listed</span>
+                    <span class="fw-bold" id="modal-listings">0</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted small">Global Review Count</span>
+                    <span class="fw-bold" id="modal-reviews">0</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted small">Reservation History</span>
+                    <span class="fw-bold" id="modal-trips">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-danger">
+            <div class="text-center p-3 border border-danger border-dashed rounded-4">
+                <div class="icon-circle bg-danger text-white mx-auto mb-3 shadow">
+                    <i class="fa-solid fa-shield-virus"></i>
+                </div>
+                <h6 class="fw-bold text-danger">Data Cascade Purge</h6>
+                <p class="x-small text-muted px-3">This will permanently erase the user and all associated media, listings, and financial records from our cloud storage.</p>
+                <form id="modal-delete-form" method="POST">
+                    <button type="submit" class="btn btn-danger w-100 py-2 rounded-pill fw-bold shadow">Initiate Deletion</button>
+                </form>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<style>
+    .status-badge { 
+    font-size: 0.65rem; font-weight: 700; padding: 3px 10px; 
+    border-radius: 50px; text-transform: uppercase; transition: 0.2s;
+}
+.status-active { background: #dcfce7; color: #166534; }
+.status-blocked { background: #fee2e2; color: #991b1b; }
+
+.role-badge:hover, .status-badge:hover { 
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
+  /* Modal Overrides for Professional Finish */
+  .rounded-5 { border-radius: 1.8rem !important; }
+  .profile-cover { background: linear-gradient(135deg, #111827 0%, #374151 100%); }
+  
+  .profile-avatar { 
+    width: 65px; height: 65px; 
+    background: linear-gradient(135deg, #FF385C 0%, #E61E4D 100%);
+    color: white; border-radius: 50%; display: flex; 
+    align-items: center; justify-content: center; font-weight: 800;
+  }
+
+  .nav-pills .nav-link { color: #6b7280; transition: all 0.3s ease; }
+  .nav-pills .nav-link.active { background-color: #ffffff !important; color: #111827 !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+
+  .finance-card { transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid #f3f4f6 !important; }
+  .finance-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+
+  .icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+  
+  /* Shadow depth for 2026 UI standards */
+  .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+
+  .btn-danger { background: #dc2626; border: none; }
+  .btn-danger:hover { background: #b91c1c; transform: scale(1.02); }
+</style>
+
+<style>
+  .x-small { font-size: 0.75rem; }
+  .extra-small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 800; }
+  
+  .role-badge { font-size: 0.7rem; font-weight: 700; padding: 5px 14px; border-radius: 50px; text-transform: uppercase; border: 1px solid transparent; }
+  .role-admin { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+  .role-user { background: #f0f9ff; color: #0284c7; border-color: #bae6fd; }
+
+  .nav-tabs .nav-link { color: #64748b; border: none; transition: all 0.2s ease; }
+  .nav-tabs .nav-link.active { color: #ff385c !important; background: transparent; border-bottom: 3px solid #ff385c !important; }
+  .nav-tabs .nav-link:hover { color: #ff385c; }
+
+  .btn-white { background: white; border: 1px solid #e2e8f0; color: #475569; transition: all 0.2s ease; }
+  .btn-white:hover { background: #f8fafc; color: #000; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); }
+
+  .nav-avatar-circle { 
+    background: linear-gradient(135deg, #FF385C 0%, #E61E4D 100%);
+    color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; 
+  }
+
+  /* Table styling */
+  #userTable tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
+  #userTable tbody tr:last-child { border-bottom: none; }
+  #userTable tbody tr:hover { background-color: #f8fafc !important; }
+</style>
+
+<script>
+  // Unified Search Logic
+  document.getElementById('userSearch').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+      let text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
+
+  // Single, Robust showPurgeModal Function
+  async function showPurgeModal(userId) {
+    const modalElement = document.getElementById('deleteConfirmModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    try {
+        const response = await fetch(`/admin/users/${userId}/stats`);
+        
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error("Server Error Response:", errorBody);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // 1. Safe Identity & Date Population
+        document.getElementById('modal-username').innerText = data.username || 'N/A';
+        document.getElementById('modal-email').innerText = data.email || 'N/A';
+        document.getElementById('modal-initial-circle').innerText = (data.username || 'U').charAt(0).toUpperCase();
+        
+        const joinedDate = data.joinedAt 
+            ? new Date(data.joinedAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+            : "Unknown Date";
+        document.getElementById('modal-joined-date').innerText = `Member since ${joinedDate}`;
+
+        // 2. Data Population
+        document.getElementById('modal-listings').innerText = data.totalListings ?? 0;
+        document.getElementById('modal-reviews').innerText = data.totalReviews ?? 0;
+        document.getElementById('modal-trips').innerText = data.totalTrips ?? 0;
+        document.getElementById('modal-spent').innerText = data.totalSpent ?? '0';
+        document.getElementById('modal-earned').innerText = data.totalEarnings ?? '0';
+
+        // 3. Form Setup
+        document.getElementById('modal-delete-form').action = `/admin/users/${userId}?_method=DELETE`;
+
+        // 4. Show Modal
+        modal.show();
+    } catch (err) {
+        console.error("Intelligence Report Error:", err);
+        alert("CRITICAL ERROR: Could not fetch user report. Ensure you are logged in as admin.");
+    }
+}
+</script>
+<script>
+  // Unified Search Logic
+  document.getElementById('userSearch').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+      let text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
+
+  async function showPurgeModal(userId) {
+    const modalElement = document.getElementById('deleteConfirmModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    try {
+        const response = await fetch(`/admin/users/${userId}/stats`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        // 1. Precise Date Formatting for Modal
+        const exactDate = new Date(data.joinedAt).toLocaleDateString('en-IN', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
+
+        // 2. Map data to Modal
+        document.getElementById('modal-username').innerText = data.username || 'N/A';
+        document.getElementById('modal-email').innerText = data.email || 'N/A';
+        document.getElementById('modal-initial-circle').innerText = (data.username || 'U').charAt(0).toUpperCase();
+        document.getElementById('modal-joined-date').innerText = `Full Registration: ${exactDate}`;
+
+        // 3. Populate Stats
+        document.getElementById('modal-listings').innerText = data.totalListings ?? 0;
+        document.getElementById('modal-reviews').innerText = data.totalReviews ?? 0;
+        document.getElementById('modal-trips').innerText = data.totalTrips ?? 0;
+        document.getElementById('modal-spent').innerText = data.totalSpent ?? '0';
+        document.getElementById('modal-earned').innerText = data.totalEarnings ?? '0';
+
+        // 4. Update Form Action
+        document.getElementById('modal-delete-form').action = `/admin/users/${userId}?_method=DELETE`;
+
+        modal.show();
+    } catch (err) {
+        console.error("Purge Modal Error:", err);
+        alert("Intelligence Report Failed: Check browser console for details.");
+    }
+}
+</script>
