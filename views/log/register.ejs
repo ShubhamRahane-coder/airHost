@@ -34,6 +34,30 @@
                  placeholder="name@example.com">
           <div class="invalid-feedback">A valid email is required.</div>
         </div>
+           <div class="mb-3">
+  <label for="phone" class="form-label fw-semibold small">Contact Number</label>
+  <input type="tel" 
+         class="form-control air-input" 
+         id="phone" 
+         name="phone" 
+         required 
+         minlength="10" 
+         maxlength="12"
+         pattern="[0-9]{10,12}"
+         placeholder="Enter your contact number">
+  <div class="invalid-feedback">Contact number must be 10–12 digits.</div>
+</div>
+
+          <div class="mb-3">
+            <label for="location" class="form-label fw-semibold small">Location</label>
+            <input type="text" 
+                   class="form-control air-input" 
+                   id="location" 
+                   name="location" 
+                   required 
+                   placeholder="ex.mumbai, india">
+            <div class="invalid-feedback">Please enter your location.</div>
+          </div>
 
         <div class="mb-4">
           <label for="password" class="form-label fw-semibold small">Password</label>

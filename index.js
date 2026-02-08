@@ -119,9 +119,9 @@ app.get("/register", (req, res) => res.render("log/register", { title: "Join air
 
 app.post("/register", validateBody(userRegisterSchema), asyncWrap(async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, phone ,location} = req.body;
         const hashedPassword = await bcrypt.hash(password, 12);
-        const user = new User({ username, email, password: hashedPassword });
+        const user = new User({ username, email, password: hashedPassword, phone, location });
         await user.save(); 
         req.session.userId = user._id;
         req.flash("success", `Welcome to airHost, ${username}!`);
@@ -203,7 +203,7 @@ app.put("/admin/users/:id", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
     }
 
     req.flash("success", `Account for ${user.username} has been updated.`);
-    res.redirect("/admin"); 
+    res.redirect("/admin/users/" + id + "/edit"); 
 }));
 
 app.get("/admin/users/:id/stats", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
@@ -657,7 +657,7 @@ app.use((err, req, res, next) => {
         title: "Error", 
         searchData: {} 
     });
-});
+}); 
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 airHost Server running on http://localhost:${PORT}`);

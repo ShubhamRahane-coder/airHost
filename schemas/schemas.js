@@ -7,6 +7,14 @@ export const userRegisterSchema = Joi.object({
   username: Joi.string().min(3).max(30).required(),
   email: Joi.string().email({ tlds: { allow: false } }).required(),
   password: Joi.string().min(6).required(),
+
+   location: Joi.string().min(3).max(30).required(), 
+  phone: Joi.string()
+  .pattern(/^[0-9]{10,12}$/)
+  .required()
+  .messages({
+    "string.pattern.base": "Contact number must be 10–12 digits",
+  }),
 });
 
 
