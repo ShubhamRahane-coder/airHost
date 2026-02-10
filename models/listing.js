@@ -147,6 +147,10 @@ category: { // Stay Type
     required: true,
     default: "Rooms",
 },
+isVerified: {
+        type: Boolean,
+        default: false // New listings are unverified by default
+    }
   },
   {
     timestamps: true,

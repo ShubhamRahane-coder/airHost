@@ -1,0 +1,163 @@
+<% layout("layouts/boilerplate") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<div class="container-fluid px-md-5 mt-4" style="max-width: 1600px; margin:auto;">
+    <div class="mb-4">
+        <h2 class="fw-bold h4 mb-0">All Properties</h2>
+        <p class="text-muted small">Advanced management and financial oversight.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Search Property / Owner</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="listingSearch" class="form-control bg-light border-0 small" placeholder="Name, ID, or Location...">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted">Min Price (₹)</label>
+                <input type="number" id="minPrice" class="form-control bg-light border-0 small" placeholder="0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted">Max Price (₹)</label>
+                <input type="number" id="maxPrice" class="form-control bg-light border-0 small" placeholder="50000+">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted">Status</label>
+                <select id="statusFilter" class="form-select bg-light border-0 small">
+                    <option value="all">All Status</option>
+                    <option value="live">Live Only</option>
+                    <option value="pending">Pending Only</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 text-end">
+                <button onclick="resetFilters()" class="btn btn-link btn-sm text-decoration-none text-danger p-0 mb-2">Reset All</button>
+                <div class="fw-bold text-dark">
+                    <span id="listingCount"><%= listings.length %></span> <span class="text-muted fw-normal">Results</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="listingsTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Property</th>
+                        <th>Status</th>
+                        <th>Host Contact</th>
+                        <th>Price/Night</th>
+                        <th>Location</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(let listing of listings) { %>
+                        <tr class="listing-row" 
+                            data-price="<%= listing.price %>" 
+                            data-status="<%= listing.isVerified ? 'live' : 'pending' %>">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="<%= listing.image.url %>" class="rounded-3 shadow-sm border me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold text-dark mb-0 small listing-title-cell"><%= listing.title %></div>
+                                        <div class="text-muted extra-small">ID: <%= listing._id %></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <% if(listing.isVerified) { %>
+                                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">Live</span>
+                                <% } else { %>
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="small fw-semibold owner-name-cell"><%= listing.owner ? listing.owner.username : "Unknown" %></span>
+                                    <span class="extra-small text-muted"><i class="fa-solid fa-phone me-1"></i><%= listing.owner?.phone || 'N/A' %></span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-dark small">₹<%= listing.price.toLocaleString("en-IN") %></span>
+                            </td>
+                            <td class="small text-muted location-cell"><%= listing.location %></td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="/listings/<%= listing._id %>" class="btn btn-outline-primary btn-sm rounded-circle action-btn"><i class="fa-solid fa-eye"></i></a>
+                                    <a href="/listings/<%= listing._id %>/edit" class="btn btn-outline-secondary btn-sm rounded-circle action-btn"><i class="fa-solid fa-pen-to-square"></i></a>
+                                    <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this listing?');" class="d-inline">
+                                        <button class="btn btn-outline-danger btn-sm rounded-circle action-btn"><i class="fa-solid fa-trash-can"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('listingSearch');
+    const minPriceInput = document.getElementById('minPrice');
+    const maxPriceInput = document.getElementById('maxPrice');
+    const statusFilter = document.getElementById('statusFilter');
+    const rows = document.querySelectorAll('.listing-row');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const minPrice = parseFloat(minPriceInput.value) || 0;
+        const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
+        const statusValue = statusFilter.value;
+        
+        let count = 0;
+
+        rows.forEach(row => {
+            const price = parseFloat(row.getAttribute('data-price'));
+            const status = row.getAttribute('data-status');
+            const text = row.innerText.toLowerCase();
+
+            const matchesSearch = text.includes(searchTerm);
+            const matchesPrice = price >= minPrice && price <= maxPrice;
+            const matchesStatus = statusValue === 'all' || status === statusValue;
+
+            if (matchesSearch && matchesPrice && matchesStatus) {
+                row.style.display = "";
+                count++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+        document.getElementById('listingCount').innerText = count;
+    }
+
+    function resetFilters() {
+        searchInput.value = '';
+        minPriceInput.value = '';
+        maxPriceInput.value = '';
+        statusFilter.value = 'all';
+        filterTable();
+    }
+
+    [searchInput, minPriceInput, maxPriceInput, statusFilter].forEach(el => {
+        el.addEventListener('input', filterTable);
+    });
+</script>
+
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .action-btn:hover { transform: scale(1.1); background-color: currentColor; color: white !important; }
+    .bg-success-subtle { background-color: #eafaf1 !important; }
+    .bg-warning-subtle { background-color: #fff9e6 !important; }
+    .extra-small { font-size: 0.7rem; }
+    table thead th { font-size: 0.7rem; text-transform: uppercase; color: #888; padding: 15px; border-bottom: 2px solid #f8f9fa; }
+</style>

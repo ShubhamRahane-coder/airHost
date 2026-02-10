@@ -1,0 +1,132 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="container px-md-5 mt-5" style="max-width: 1200px; margin:auto;">
+    <div class="mb-5 text-center">
+        <h2 class="fw-bold">Admin Control Center</h2>
+        <p class="text-muted">Manage your platform listings, users, and financial health.</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-4 text-center bg-white shadow-sm">
+                <p class="text-muted small fw-bold mb-1">REVENUE</p>
+                <h5 class="fw-bold mb-0">₹<%= stats.totalRevenue.toLocaleString("en-IN") %></h5>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-4 text-center bg-white shadow-sm">
+                <p class="text-muted small fw-bold mb-1">LISTINGS</p>
+                <h5 class="fw-bold mb-0"><%= stats.totalListings %></h5>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-4 text-center bg-white shadow-sm">
+                <p class="text-muted small fw-bold mb-1">USERS</p>
+                <h5 class="fw-bold mb-0"><%= stats.totalUsers %></h5>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-4 text-center bg-white shadow-sm">
+                <p class="text-muted small fw-bold mb-1">PENDING</p>
+                <h5 class="fw-bold mb-0 text-danger"><%= stats.pendingCount %></h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <a href="/admin/pending-listings" class="admin-card-link">
+                <div class="card h-100 admin-menu-card border-0 shadow-sm p-4 text-center">
+                    <div class="admin-icon-circle mb-3 mx-auto text-danger bg-danger-subtle">
+                        <span class="material-symbols-outlined">verified_user</span>
+                    </div>
+                    <h5 class="fw-bold">Verify Listings</h5>
+                    <p class="text-muted small">Approve or reject new property submissions.</p>
+                    <% if(stats.pendingCount > 0) { %>
+                        <span class="badge rounded-pill bg-danger"><%= stats.pendingCount %> New Action</span>
+                    <% } %>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/admin/dashboard/user-management" class="admin-card-link">
+                <div class="card h-100 admin-menu-card border-0 shadow-sm p-4 text-center">
+                    <div class="admin-icon-circle mb-3 mx-auto text-primary bg-primary-subtle">
+                        <span class="material-symbols-outlined">group</span>
+                    </div>
+                    <h5 class="fw-bold">User Management</h5>
+                    <p class="text-muted small">View all users, change roles, or ban accounts.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/admin/all-listings" class="admin-card-link">
+                <div class="card h-100 admin-menu-card border-0 shadow-sm p-4 text-center">
+                    <div class="admin-icon-circle mb-3 mx-auto text-success bg-success-subtle">
+                        <span class="material-symbols-outlined">home_work</span>
+                    </div>
+                    <h5 class="fw-bold">All Properties</h5>
+                    <p class="text-muted small">Force edit or delete any listing on the site.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/admin/bookings" class="admin-card-link">
+                <div class="card h-100 admin-menu-card border-0 shadow-sm p-4 text-center">
+                    <div class="admin-icon-circle mb-3 mx-auto text-warning bg-warning-subtle">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                    </div>
+                    <h5 class="fw-bold">Bookings</h5>
+                    <p class="text-muted small">Monitor all active and past reservations.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/help" class="admin-card-link">
+                <div class="card h-100 admin-menu-card border-0 shadow-sm p-4 text-center">
+                    <div class="admin-icon-circle mb-3 mx-auto text-secondary bg-light">
+                        <span class="material-symbols-outlined">settings</span>
+                    </div>
+                    <h5 class="fw-bold">Site Settings</h5>
+                    <p class="text-muted small">Adjust fees, platform names, and policies.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-menu-card {
+        border-radius: 1.5rem !important;
+        transition: all 0.3s ease;
+        border: 1px solid #eee !important;
+    }
+    .admin-menu-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+        border-color: #ff385c !important;
+    }
+    .admin-card-link {
+        text-decoration: none !important;
+        color: inherit;
+    }
+    .admin-icon-circle {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .admin-icon-circle .material-symbols-outlined {
+        font-size: 30px;
+    }
+    .bg-danger-subtle { background-color: #fff1f3; }
+    .bg-primary-subtle { background-color: #e7f3ff; }
+    .bg-success-subtle { background-color: #eafaf1; }
+    .bg-warning-subtle { background-color: #fef9e7; }
+</style>

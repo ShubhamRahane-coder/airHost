@@ -36,13 +36,10 @@ export const listingSchema = Joi.object({
     location: Joi.string().required(),
     country: Joi.string().required(),
     
-    // 1. The Stay Style (Rooms, Hotels, etc.)
     category: Joi.string()
       .valid("Rooms", "Hotels", "Entire Home", "Cabins", "Luxe")
       .required(),
 
-    // 2. The Admin Badge (Standard, Premium, etc.)
-    // We ADD this here to fix the "is not allowed" error
     badgesCategory: Joi.string()
       .valid(
         "Standard", "Premium", "Budget", "Luxury", 
@@ -51,6 +48,12 @@ export const listingSchema = Joi.object({
       )
       .allow("", null)
       .default("Standard"),
+
+    // --- ADDED THIS FIELD ---
+    isVerified: Joi.boolean()
+      .allow("true", "false") // Allows strings if your form sends them that way
+      .default(false),
+    // ------------------------
     
     guests: Joi.number().min(1).required(),
 
@@ -78,7 +81,6 @@ export const listingSchema = Joi.object({
     lng: Joi.number().allow("", null).optional(),
   }).required(),
 });
-
 
 
 

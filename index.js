@@ -163,10 +163,65 @@ const isAdmin = (req, res, next) => {
 };
 
 // 1. ADMIN DASHBOARD - View all users
-app.get("/admin/dashboard", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
+app.get("/admin/dashboard", isLoggedIn, asyncWrap(async (req, res) => {
+
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Access denied.");
+        return res.redirect("/listings");
+    }
+
+    const totalListings = await Listing.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const pendingCount = await Listing.countDocuments({ isVerified: false });
+
+    const revenueResult = await Reservation.aggregate([
+        { $match: { status: "Confirmed" } },
+        {
+            $group: {
+                _id: null,
+                totalRevenue: { $sum: "$price" }
+            }
+        }
+    ]);
+
+    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
+
+    res.render("admin/adminDashbord", {
+        stats: {
+            totalListings,
+            totalUsers,
+            pendingCount,
+            totalRevenue
+        },
+        title: "Admin Dashboard | airHost"
+    });
+}));
+
+
+// Route to view All Listings for Admin
+app.get("/admin/all-listings", isLoggedIn, asyncWrap(async (req, res) => {
+    // 1. Authorization Check
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Access denied. Admins only.");
+        return res.redirect("/listings");
+    }
+
+    // 2. Fetch all listings and populate owner details
+    const allListings = await Listing.find({})
+        .populate("owner", "username email")
+        .sort({ createdAt: -1 });
+
+    // 3. Render the page (Passing 'listings' and 'title' to prevent errors)
+    res.render("admin/allListings", { 
+        listings: allListings, 
+        title: "All Properties | Admin" 
+    });
+}));
+
+app.get("/admin/dashboard/user-management", isLoggedIn, isAdmin, asyncWrap(async (req, res) => {
     // We populate listings to show how many properties each user owns
     const users = await User.find({}).sort({ createdAt: -1 });
-    res.render("admin/dashboard", { users, title: "Admin Panel | airHost" });
+    res.render("admin/userManagement", { users, title: "User Management | airHost" });
 }));
 
 // 2. INDIVIDUAL ACCESS FORM - Edit a specific user's role
@@ -187,6 +242,50 @@ app.get("/admin/users/:id/edit", isLoggedIn, isAdmin, validateObjectId, asyncWra
         title: `Edit Access: ${user.username}` 
     });
 }));
+
+
+
+// Route to view All Bookings for Admin
+// Route to view All Bookings for Admin
+app.get("/admin/bookings", isLoggedIn, asyncWrap(async (req, res) => {
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Access denied.");
+        return res.redirect("/listings");
+    }
+
+    // Use 'Reservation' instead of 'Booking'
+    const allBookings = await Reservation.find({})
+        .populate("listing")
+        .populate("guest")
+        .sort({ createdAt: -1 });
+
+    res.render("admin/bookings", { 
+        bookings: allBookings, 
+        title: "Manage Bookings | Admin" 
+    });
+}));
+
+
+
+// CANCEL Route (Not Delete)
+app.patch("/admin/bookings/:id/cancel", isLoggedIn, asyncWrap(async (req, res) => {
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Unauthorized.");
+        return res.redirect("/listings");
+    }
+
+    const { id } = req.params;
+
+    // We only update the status field
+    await Reservation.findByIdAndUpdate(id, { status: "Cancelled" });
+
+    req.flash("success", "Booking status updated to Cancelled.");
+    res.redirect("/admin/bookings");
+}));
+
+
+
+
 
 // 3. UPDATE USER ACCESS - Save changes to role/email
 // PUT Route to update user details
@@ -265,12 +364,46 @@ app.delete("/admin/users/:id", isLoggedIn, isAdmin, validateObjectId, asyncWrap(
     req.flash("success", `Account for ${deletedUser.username} and all linked properties/reviews have been purged.`);
     res.redirect("/admin/dashboard");
 }));
+
+
+
+
+
+
+// ================= admin verifying LISTING  =================
+
+
+
+// Route to view all unverified listings
+app.get("/admin/pending-listings", isLoggedIn, asyncWrap(async (req, res) => {
+    if (res.locals.currentUser?.role !== "admin") {
+        req.flash("error", "Access denied. Admins only.");
+        return res.redirect("/listings");
+    }
+
+    const pendingListings = await Listing.find({ isVerified: false }).populate("owner", "username");
+
+    res.render("listings/pendingListings", { 
+        listings: pendingListings, // Change 'pendingListings' to 'listings' here
+        title: "Pending Approval | Admin" 
+    });
+}));
+
+
+
+
 // ================= LISTING ROUTES =================
 
 app.get("/", asyncWrap(async (req, res) => {
-    const listings = await Listing.find({}).populate("owner", "username");
+    // 1. Filter: Only find listings where isVerified is explicitly true
+    const listings = await Listing.find({ isVerified: true }).populate("owner", "username");
+    
     // Passing empty searchData to prevent 'searchData is not defined' in header/navbar
-    res.render("listings/index", { listings, searchData: {}, title: "airHost | Vacation Rentals" });
+    res.render("listings/index", { 
+        listings, 
+        searchData: {}, 
+        title: "airHost | Vacation Rentals" 
+    });
 }));
 
 app.post('/listings/find', asyncWrap(async (req, res) => {
@@ -376,13 +509,26 @@ app.put("/listings/:id", isLoggedIn, validateObjectId, fixAmenities, validateBod
     // 1. Extract cleaned data from body
     const updateData = { ...req.body.listing };
 
-    // 2. Clean up Numeric Fields (Ensures data types are correct for MongoDB)
+    // 2. Clean up Numeric Fields
     updateData.price = Number(updateData.price);
     updateData.cleaningFee = Number(updateData.cleaningFee || 0);
     updateData.serviceFeePct = Number(updateData.serviceFeePct || 3);
     updateData.guests = Number(updateData.guests || 1);
 
-    // 3. Update the Database
+    // 3. Logic for isVerified (Boolean Conversion)
+    // Only allow update if isVerified is present in the request
+    if (updateData.isVerified !== undefined) {
+        // Form sends "true"/"false" as strings, we need actual Booleans
+        updateData.isVerified = updateData.isVerified === "true";
+    }
+
+    // 4. Security: If NOT an admin, delete isVerified from updateData 
+    // This prevents malicious users from injecting "isVerified: true" via Postman
+    if (!isAdmin) {
+        delete updateData.isVerified;
+    }
+
+    // 5. Update the Database
     await Listing.findByIdAndUpdate(id, updateData, { runValidators: true });
 
     req.flash("success", "Updated successfully!");
@@ -528,20 +674,33 @@ app.put("/dashboard/trips/:id/cancel", isLoggedIn, asyncWrap(async (req, res) =>
 
 
 // Route to update reservation details (The "Reflex")
+// Route to update reservation details (The "Reflex")
 app.put("/dashboard/reservations/:id", isLoggedIn, asyncWrap(async (req, res) => {
     const { id } = req.params;
     const { reservation } = req.body;
 
-    // Convert checkbox 'on' value to Boolean
-    reservation.isVerified = req.body.reservation.isVerified === 'on';
+    // 1. Fetch the existing reservation first
+    const existingReservation = await Reservation.findById(id);
 
-    const updatedRes = await Reservation.findByIdAndUpdate(id, { ...reservation }, { new: true });
-    
-    if (!updatedRes) {
+    if (!existingReservation) {
         req.flash("error", "Reservation not found.");
         return res.redirect("/dashboard/reservations");
     }
 
+    // 2. BLOCKER: Check if the guest has already cancelled it
+    if (existingReservation.status === "Cancelled") {
+        req.flash("error", "This reservation has been cancelled by the guest and cannot be modified.");
+        return res.redirect("/dashboard/reservations");
+    }
+
+    // 3. Convert checkbox 'on' value to Boolean (for your verification toggle)
+    if(req.body.reservation) {
+        reservation.isVerified = req.body.reservation.isVerified === 'on';
+    }
+
+    // 4. Proceed with update if not cancelled
+    await Reservation.findByIdAndUpdate(id, { ...reservation }, { new: true });
+    
     req.flash("success", "Reservation details updated!");
     res.redirect("/dashboard/reservations");
 }));

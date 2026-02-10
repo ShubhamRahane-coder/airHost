@@ -1,0 +1,309 @@
+<% layout("layouts/boilerplate") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<div class="container-fluid px-md-5 mt-4" style="max-width: 1600px; margin:auto; font-family: 'Plus Jakarta Sans', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold h3 mb-1 text-dark">Booking Oversight</h2>
+            <p class="text-muted mb-0">Manage reservations, guests, and revenue streams.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-white text-dark border shadow-sm px-3 py-2 rounded-pill">
+                <i class="fa-solid fa-clock-rotate-left me-1 text-primary"></i> 
+                Last Updated: <%= new Date().toLocaleTimeString() %>
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <% 
+            let confirmed = bookings.filter(b => b.status === 'Confirmed');
+            let pending = bookings.filter(b => b.status === 'Pending');
+            let cancelled = bookings.filter(b => b.status === 'Cancelled');
+            let revenue = confirmed.reduce((acc, b) => acc + (b.price || 0), 0);
+        %>
+        <div class="col-md-3">
+            <div class="stat-card p-4 shadow-sm border-0 rounded-4 bg-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small fw-bold mb-1">TOTAL VOLUME</p>
+                        <h3 class="fw-bold mb-0"><%= bookings.length %></h3>
+                    </div>
+                    <div class="icon-box bg-primary-subtle text-primary"><i class="fa-solid fa-layer-group"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-4 shadow-sm border-0 rounded-4 bg-white border-bottom border-success border-4">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-success small fw-bold mb-1">REVENUE (EST.)</p>
+                        <h3 class="fw-bold mb-0">₹<%= revenue.toLocaleString("en-IN") %></h3>
+                        <span class="extra-small text-muted"><%= confirmed.length %> Confirmed stays</span>
+                    </div>
+                    <div class="icon-box bg-success-subtle text-success"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-4 shadow-sm border-0 rounded-4 bg-white border-bottom border-warning border-4">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-warning small fw-bold mb-1">PENDING ACTIONS</p>
+                        <h3 class="fw-bold mb-0"><%= pending.length %></h3>
+                        <span class="extra-small text-muted">Awaiting confirmation</span>
+                    </div>
+                    <div class="icon-box bg-warning-subtle text-warning"><i class="fa-solid fa-hourglass-half"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-4 shadow-sm border-0 rounded-4 bg-white border-bottom border-danger border-4">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-danger small fw-bold mb-1">CANCELLATIONS</p>
+                        <h3 class="fw-bold mb-0"><%= cancelled.length %></h3>
+                        <span class="extra-small text-muted">Refunds may apply</span>
+                    </div>
+                    <div class="icon-box bg-danger-subtle text-danger"><i class="fa-solid fa-xmark"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted ps-1">Quick Search</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" id="bookingSearch" class="form-control bg-light border-0 py-2" placeholder="Guest, Email, or Property...">
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label small fw-bold text-muted ps-1">Status</label>
+            <select id="statusFilter" class="form-select bg-light border-0 py-2">
+                <option value="all">All Status</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="pending">Pending</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted ps-1">Sort By</label>
+            <select id="sortFilter" class="form-select bg-light border-0 py-2 fw-bold text-primary">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="priceHigh">Price: High to Low</option>
+                <option value="priceLow">Price: Low to High</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 text-end">
+            <button onclick="window.location.reload()" class="btn btn-dark rounded-pill px-4 shadow-sm w-100 py-2">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Refresh Data
+            </button>
+        </div>
+    </div>
+</div>
+
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="bookingsTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Guest & Contact</th>
+                        <th>Property Details</th>
+                        <th>Stay Duration</th>
+                        <th>Price Details</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+    <% for(let booking of bookings) { %>
+        <tr class="booking-row <%= booking.status === 'Cancelled' ? 'opacity-50 grayscale' : '' %>" 
+            data-status="<%= booking.status.toLowerCase() %>"
+            data-price="<%= booking.price || 0 %>"
+            data-time="<%= new Date(booking.createdAt || booking.checkIn).getTime() %>">
+            
+            <td class="ps-4">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle me-3 fw-bold">
+                        <%= booking.guest ? booking.guest.username.charAt(0).toUpperCase() : '?' %>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark mb-0"><%= booking.guest ? booking.guest.username : "Unknown Guest" %></div>
+                        <div class="extra-small text-muted mb-1"><%= booking.guest ? booking.guest.email : "" %></div>
+                        <span class="badge bg-light text-dark border extra-small">
+                            <i class="fa-solid fa-phone me-1 text-primary"></i><%= booking.guest?.phone || 'No Contact' %>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="small fw-bold text-dark property-title"><%= booking.listing ? booking.listing.title : 'Deleted Property' %></div>
+                <div class="extra-small text-muted"><%= booking.listing ? booking.listing.location : 'N/A' %></div>
+                <div class="extra-small mt-1 text-primary">ID: <%= booking._id %></div>
+            </td>
+            <td class="small">
+                <div class="mb-1"><span class="text-muted me-1">IN:</span> <span class="fw-medium"><%= booking.checkIn.toDateString() %></span></div>
+                <div><span class="text-muted me-1">OUT:</span> <span class="fw-medium"><%= booking.checkOut.toDateString() %></span></div>
+                <div class="mt-1 fw-bold text-secondary extra-small">
+                    <i class="fa-solid fa-users me-1"></i><%= booking.adults %> Adults • <%= booking.children %> Kids
+                </div>
+            </td>
+            <td>
+                <div class="fw-bold text-dark fs-6">₹<%= (booking.price || 0).toLocaleString("en-IN") %></div>
+                <div class="extra-small text-success">Verified Transaction</div>
+            </td>
+            <td>
+                <span class="badge status-pill <%= booking.status.toLowerCase() %>">
+                    <%= booking.status %>
+                </span>
+            </td>
+            <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/listings/<%= booking.listing ? booking.listing._id : '' %>" class="btn btn-outline-primary btn-sm rounded-pill px-3 action-btn-text" title="View Property">
+                        <i class="fa-solid fa-eye me-1"></i> View
+                    </a>
+                    
+                    <% if(booking.status !== 'Cancelled') { %>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill px-3 cancel-trigger-btn" data-id="<%= booking._id %>" data-title="<%= booking.listing ? booking.listing.title : 'this property' %>">
+                            <i class="fa-solid fa-ban me-1"></i> Cancel
+                        </button>
+                    <% } else { %>
+                        <button class="btn btn-light btn-sm rounded-pill px-3 disabled text-muted extra-small">
+                            <i class="fa-solid fa-check me-1"></i> Closed
+                        </button>
+                    <% } %>
+                </div>
+            </td>
+        </tr>
+    <% } %>
+</tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="bg-danger py-2"></div>
+            <div class="modal-body text-center p-5">
+                <div class="mb-3 text-danger">
+                    <i class="fa-solid fa-triangle-exclamation display-4"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Cancel This Booking?</h4>
+                <p class="text-muted mb-4 px-3">This will mark the reservation for <br><strong id="propNameDisplay" class="text-dark"></strong> as Cancelled. This cannot be undone easily.</p>
+                
+                <form id="confirmCancelForm" method="POST">
+                    <div class="d-flex gap-3 justify-content-center">
+                        <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-bold" data-bs-dismiss="modal">Go Back</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow">Yes, Cancel It</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling Upgrades */
+    .stat-card { transition: transform 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    
+    .avatar-circle { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff385c, #d70466); color: white; font-size: 1rem; }
+    
+    .status-pill { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; padding: 6px 14px; border-radius: 50px; font-weight: 800; border-width: 2px; }
+    .status-pill.confirmed { background: #eafaf1; color: #1aae5f; border: 1px solid #1aae5f; }
+    .status-pill.pending { background: #fff9e6; color: #b78a02; border: 1px solid #f1c40f; }
+    .status-pill.cancelled { background: #f4f4f4; color: #777; border: 1px solid #ddd; }
+    
+    .action-btn-text { font-size: 0.75rem; font-weight: 600; }
+    .extra-small { font-size: 0.7rem; }
+    .grayscale { filter: grayscale(1); }
+    
+    table thead th { font-size: 0.72rem; text-transform: uppercase; color: #888; padding: 18px 12px; border-bottom: 2px solid #f0f0f0; }
+    .booking-row:hover { background-color: #fbfbfb !important; }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // 1. Initialize Modal & Elements
+        const modalElement = document.getElementById('cancelConfirmModal');
+        const cancelModal = modalElement ? new bootstrap.Modal(modalElement) : null;
+        const tableBody = document.querySelector("#bookingsTable tbody");
+        
+        const searchInput = document.getElementById('bookingSearch');
+        const statusSelect = document.getElementById('statusFilter');
+        const sortSelect = document.getElementById('sortFilter');
+
+        function updateTable() {
+            // Get current rows as an array
+            let rows = Array.from(document.querySelectorAll('.booking-row'));
+            
+            const term = searchInput.value.toLowerCase();
+            const status = statusSelect.value.toLowerCase();
+            const sortBy = sortSelect.value;
+
+            // --- A. FILTERING ---
+            rows.forEach(row => {
+                const rowText = row.innerText.toLowerCase();
+                const rowStatus = row.getAttribute('data-status') || "";
+                
+                const matchesSearch = rowText.includes(term);
+                const matchesStatus = status === 'all' || rowStatus === status;
+                
+                row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+            });
+
+            // --- B. SORTING ---
+            rows.sort((a, b) => {
+                const priceA = Number(a.getAttribute('data-price')) || 0;
+                const priceB = Number(b.getAttribute('data-price')) || 0;
+                const timeA = Number(a.getAttribute('data-time')) || 0;
+                const timeB = Number(b.getAttribute('data-time')) || 0;
+
+                if (sortBy === 'priceHigh') return priceB - priceA;
+                if (sortBy === 'priceLow') return priceA - priceB;
+                if (sortBy === 'oldest') return timeA - timeB;
+                if (sortBy === 'newest') return timeB - timeA;
+                return 0;
+            });
+
+            // --- C. RE-APPEND (MOVES ROWS) ---
+            rows.forEach(row => tableBody.appendChild(row));
+        }
+
+        // 2. Event Listeners
+        [searchInput, statusSelect, sortSelect].forEach(el => {
+            if(el) el.addEventListener('change', updateTable);
+            if(el) el.addEventListener('input', updateTable);
+        });
+
+        // 3. Keep your existing Cancel Modal Logic
+        document.addEventListener("click", (event) => {
+            const btn = event.target.closest(".cancel-trigger-btn");
+            if (btn) {
+                event.preventDefault();
+                const bookingId = btn.getAttribute("data-id");
+                const propertyTitle = btn.getAttribute("data-title");
+
+                document.getElementById('propNameDisplay').innerText = propertyTitle;
+                document.getElementById('confirmCancelForm').action = `/admin/bookings/${bookingId}/cancel?_method=PATCH`;
+                
+                if(cancelModal) cancelModal.show();
+            }
+        });
+
+        // Initial run to sort by 'Newest' on page load
+        updateTable();
+    });
+</script>

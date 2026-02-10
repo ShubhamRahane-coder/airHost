@@ -88,6 +88,23 @@
   <% } else { %>
     <input type="hidden" name="listing[badgesCategory]" value="<%= (listing && listing.badgesCategory) ? listing.badgesCategory : 'Standard' %>">
   <% } %>
+ <% if (activeUser && activeUser.role === "admin") { %>
+  <div class="col-md-4">
+    <label for="isVerified" class="form-label air-label">
+      <i class="fa-solid fa-circle-check text-success me-1"></i> Verification Status
+    </label>
+    <select name="listing[isVerified]" id="isVerified" class="form-select air-input">
+      <option value="false" <%= (listing && listing.isVerified === false) ? 'selected' : '' %>>
+        Pending / Unverified
+      </option>
+      <option value="true" <%= (listing && listing.isVerified === true) ? 'selected' : '' %>>
+        Verified / Live
+      </option>
+    </select>
+  </div>
+<% } else { %>
+  <input type="hidden" name="listing[isVerified]" value="<%= (listing && listing.isVerified) ? 'true' : 'false' %>">
+<% } %>
 </div>
   </div>
 </section>
