@@ -5,7 +5,7 @@
         <h2 class="fw-bold h4">Explore Stays</h2>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
+    <div id="listingContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
         <% for(let listing of listings) { %>
             <div class="col d-flex">
                 <a href="/listings/<%= listing._id %>" class="listing-link w-100">
@@ -51,6 +51,15 @@
             </div>
         <% } %>
     </div>
+    <div class="text-center mt-4">
+   <button id="loadMoreBtn"
+        data-offset="<%= listings.length %>"
+        class="btn btn-dark">
+    Load More
+</button>
+
+</div>
+
 </div>
 
 <style>
@@ -153,3 +162,76 @@
 
 
 </style>
+
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loadBtn = document.getElementById("loadMoreBtn");
+    const container = document.getElementById("listingContainer");
+
+    if (!loadBtn) return;
+
+    loadBtn.addEventListener("click", async () => {
+
+        try {
+            let offset = parseInt(loadBtn.dataset.offset);
+
+            const response = await fetch(`/api/listings?offset=${offset}&limit=10`);
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            const data = await response.json();
+
+            if (data.listings.length === 0) {
+                loadBtn.style.display = "none";
+                return;
+            }
+
+            data.listings.forEach(listing => {
+
+                const card = `
+                <div class="col d-flex">
+                    <a href="/listings/${listing._id}" class="listing-link w-100">
+                        <div class="card h-100 air-card shadow-sm border-0">
+                            <div class="img-container">
+                                <img src="${listing.image.url}" class="card-img-top listing-img">
+                            </div>
+                            <div class="card-body p-3">
+                                <p class="fw-bold small mb-1">${listing.title}</p>
+                                <p class="text-muted extra-small mb-2">
+                                    ${listing.location}, ${listing.country}
+                                </p>
+                                <p class="mb-0">
+                                    <span class="fw-bold">₹ ${listing.price.toLocaleString("en-IN")}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                `;
+
+                container.insertAdjacentHTML("beforeend", card);
+            });
+
+            loadBtn.dataset.offset = offset + data.listings.length;
+
+            if (loadBtn.dataset.offset >= data.total) {
+                loadBtn.style.display = "none";
+            }
+
+        } catch (error) {
+            console.error("Load more failed:", error);
+        }
+
+    });
+
+});
+</script>
+

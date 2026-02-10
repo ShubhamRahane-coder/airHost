@@ -383,7 +383,7 @@ app.get("/admin/pending-listings", isLoggedIn, asyncWrap(async (req, res) => {
 
     const pendingListings = await Listing.find({ isVerified: false }).populate("owner", "username");
 
-    res.render("listings/pendingListings", { 
+    res.render("admin/pendingListings", { 
         listings: pendingListings, // Change 'pendingListings' to 'listings' here
         title: "Pending Approval | Admin" 
     });
@@ -394,17 +394,45 @@ app.get("/admin/pending-listings", isLoggedIn, asyncWrap(async (req, res) => {
 
 // ================= LISTING ROUTES =================
 
-app.get("/", asyncWrap(async (req, res) => {
-    // 1. Filter: Only find listings where isVerified is explicitly true
-    const listings = await Listing.find({ isVerified: true }).populate("owner", "username");
-    
-    // Passing empty searchData to prevent 'searchData is not defined' in header/navbar
-    res.render("listings/index", { 
-        listings, 
-        searchData: {}, 
-        title: "airHost | Vacation Rentals" 
+// feching all the verified listings for the homepage and api endpoint
+
+app.get("/api/listings", asyncWrap(async (req, res) => {
+
+    let offset = parseInt(req.query.offset) || 0;
+    let limit = parseInt(req.query.limit) || 10;
+
+    const listings = await Listing.find({ isVerified: true })
+        .populate("owner", "username")
+        .skip(offset)
+        .limit(limit);
+
+    const total = await Listing.countDocuments({ isVerified: true });
+
+    res.json({
+        listings,
+        total
     });
 }));
+
+
+
+app.get("/", asyncWrap(async (req, res) => {
+
+    const listings = await Listing.find({ isVerified: true })
+        .populate("owner", "username")
+        .limit(20);
+
+    const totalListings = await Listing.countDocuments({ isVerified: true });
+
+    res.render("listings/index", { 
+        listings,
+        totalListings,
+        searchData: {},
+        title: "airHost | Vacation Rentals"
+    });
+}));
+
+
 
 app.post('/listings/find', asyncWrap(async (req, res) => {
     const { location } = req.body;
