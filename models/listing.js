@@ -37,22 +37,27 @@ const listingSchema = new Schema(
       trim: true,
     },
 
-    image: {
-      url: {
-        type: String,
-        required: [true, "Image URL is required"],
-        validate: {
-          validator: function (v) {
-            return /^https?:\/\/.+/.test(v);
+    image: [
+      {
+        url: {
+          type: String,
+          default: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop",
+          set: (v) => v === "" 
+            ? "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop" 
+            : v,
+          validate: {
+            validator: function (v) {
+              return /^https?:\/\/.+/.test(v);
+            },
+            message: "Image must be a valid URL",
           },
-          message: "Image must be a valid URL",
         },
-      },
-      filename: {
-        type: String,
-        default: "",
-      },
-    },
+        filename: {
+          type: String,
+          default: "listingimage",
+        },
+      }
+    ],
 
     // --- NEW FIELDS: CATEGORY & GUESTS ---
     

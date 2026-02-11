@@ -90,14 +90,48 @@
       </div>
     </div>
 
-    <div class="col-12 mb-4">
-      <div class="show-img-container shadow-sm position-relative">
-        <img src="<%= listing.image.url || '/default.jpg' %>" class="show-img rounded-4" alt="<%= listing.title %>">
-        <% if (listing.price > 10000) { %>
-          <div class="premium-badge">Premium Stay</div>
-        <% } %>
-      </div>
+   <div class="col-12 mb-4">
+  <div id="listingCarousel" class="carousel slide shadow-sm rounded-4 overflow-hidden" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+      <% listing.image.forEach((img, index) => { %>
+        <button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= index %>" class="<%= index === 0 ? 'active' : '' %>" aria-current="<%= index === 0 ? 'true' : 'false' %>"></button>
+      <% }) %>
     </div>
+
+    <div class="carousel-inner">
+  <% if (listing.image && listing.image.length > 0) { %>
+    <% listing.image.forEach((img, index) => { %>
+      <div class="carousel-item <%= index === 0 ? 'active' : '' %> position-relative">
+        <img src="<%= img.url %>" class="d-block w-100 show-img" alt="Image <%= index + 1 %>">
+        
+        <button type="button" 
+                class="btn btn-light btn-sm position-absolute bottom-0 end-0 m-3 rounded-circle shadow-sm d-flex align-items-center justify-content-center zoom-trigger" 
+                onclick="openLightbox(<%= index %>)" 
+                style="width: 42px; height: 42px; z-index: 10; opacity: 0.9; border: 1px solid #ddd;">
+            <span class="material-symbols-outlined" style="font-size: 22px; color: #222;">zoom_in</span>
+        </button>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+    <% if (listing.image && listing.image.length > 1) { %>
+      <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    <% } %>
+
+    <% if (listing.price > 10000) { %>
+      <div class="premium-badge" style="z-index: 5;">Premium Stay</div>
+    <% } %>
+  </div>
+  
+</div>
 
     <div class="col-lg-7">
       <div class="details-card p-4 rounded-4 shadow-sm border mb-4">
@@ -289,6 +323,30 @@
   </div>
 </div>
 
+<div class="modal fade" id="imageLightbox" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="modal-body p-0 position-relative d-flex align-items-center justify-content-center">
+                
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1100;"></button>
+                
+                <div id="lightboxCounter" class="position-absolute top-0 start-0 m-3 text-white small fw-bold" style="z-index: 1100; background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 20px;"></div>
+
+                <button class="lightbox-nav-btn prev" onclick="changeLightboxImg(-1)">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+
+                <img src="" id="lightboxImg" class="img-fluid rounded-4 shadow-lg">
+
+                <button class="lightbox-nav-btn next" onclick="changeLightboxImg(1)">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
   /* Reuse Modal Styles */
   .custom-modal-overlay {
@@ -337,6 +395,95 @@
 .btn-air-danger-filled:hover {
     background: #bd1e59;
     box-shadow: 0 4px 12px rgba(255, 56, 92, 0.3);
+}
+
+
+
+
+
+
+
+/* Maintain consistent height for the carousel */
+#listingCarousel {
+    max-height: 500px;
+    background-color: #f1f1f1;
+}
+
+.carousel-item img {
+    height: 500px; /* Force height to match your previous show-img style */
+    object-fit: cover;
+}
+
+/* Style the arrows to look more like AirHost/Modern UI */
+.carousel-control-prev, .carousel-control-next {
+    width: 5%;
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5);
+    background-size: 50% 50%;
+    border-radius: 50%;
+    padding: 20px;
+}
+
+/* Indicators styling */
+.carousel-indicators [data-bs-target] {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 0 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+#imageLightbox {
+    backdrop-filter: blur(15px);
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#lightboxImg {
+    max-height: 85vh;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+/* Custom Nav Buttons */
+.lightbox-nav-btn {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    z-index: 1060;
+}
+
+.lightbox-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.lightbox-nav-btn.prev { left: 20px; }
+.lightbox-nav-btn.next { right: 20px; }
+
+.zoom-trigger:hover {
+    transform: scale(1.1);
+    background-color: white !important;
 }
 </style>
 
@@ -601,4 +748,41 @@ document.getElementById('finalDeleteBtn').onclick = function() {
       setTimeout(() => { map.invalidateSize(); }, 400);
     <% } %>
   });
+
+
+
+// 1. Create the image array from EJS
+const listingImages = [<% listing.image.forEach(img => { %> "<%= img.url %>", <% }) %>];
+let activeIdx = 0;
+
+function openLightbox(index) {
+    activeIdx = index;
+    updateLightbox();
+    const modal = new bootstrap.Modal(document.getElementById('imageLightbox'));
+    modal.show();
+}
+
+function changeLightboxImg(step) {
+    activeIdx += step;
+    if (activeIdx >= listingImages.length) activeIdx = 0;
+    if (activeIdx < 0) activeIdx = listingImages.length - 1;
+    updateLightbox();
+}
+
+function updateLightbox() {
+    const img = document.getElementById('lightboxImg');
+    const counter = document.getElementById('lightboxCounter');
+    
+    img.src = listingImages[activeIdx];
+    counter.innerText = `${activeIdx + 1} / ${listingImages.length}`;
+}
+
+// 2. Keyboard Support
+document.addEventListener('keydown', (e) => {
+    const lb = document.getElementById('imageLightbox');
+    if (lb.classList.contains('show')) {
+        if (e.key === "ArrowRight") changeLightboxImg(1);
+        if (e.key === "ArrowLeft") changeLightboxImg(-1);
+    }
+});
 </script>

@@ -57,10 +57,15 @@ export const listingSchema = Joi.object({
     
     guests: Joi.number().min(1).required(),
 
-    image: Joi.object({
-      url: Joi.string().uri().allow("", null).optional(),
-      filename: Joi.string().allow("", null).optional(),
-    }).optional(),
+image: Joi.array()
+  .items(
+    Joi.string()
+      .uri()
+      .allow("", null)
+      .trim()
+  )
+  .optional()
+  .default([]),
     
     cleaningFee: Joi.number().min(0).allow("", null).default(0),
     serviceFeePct: Joi.number().min(0).max(100).allow("", null).default(3),

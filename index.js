@@ -473,23 +473,30 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 
 
 app.post("/listings/createListing", isLoggedIn, fixAmenities, validateBody(listingSchema), asyncWrap(async (req, res) => {
-    // 1. Extract listing data (already cleaned by fixAmenities middleware)
     const { listing } = req.body;
 
-    // 2. Ensure Numeric Fields are valid numbers
-    // Note: We use || 0 to prevent NaN if the user leaves optional fields blank
+    // 1. Transform String Array to Object Array for Mongoose
+    if (listing.image && Array.isArray(listing.image)) {
+        listing.image = listing.image
+            .filter(url => url.trim() !== "") // Remove the last empty auto-generated box
+            .map(url => ({
+                url: url,
+                filename: "listingimage" // Provide a default filename
+            }));
+    }
+
+    // 2. Ensure Numeric Fields are valid
     listing.price = Number(listing.price);
     listing.cleaningFee = Number(listing.cleaningFee || 0);
     listing.serviceFeePct = Number(listing.serviceFeePct || 3);
     listing.guests = Number(listing.guests || 1);
 
-    // 3. Create the Listing
+    // 3. Create the Listing with transformed data
     const newListing = new Listing({ 
         ...listing, 
-        owner: req.session.userId // FIXED: Using manual session ID instead of req.user
+        owner: req.session.userId 
     });
 
-    // 4. Save and Redirect
     await newListing.save();
     
     req.flash("success", "New airHost listing created!");
@@ -543,15 +550,22 @@ app.put("/listings/:id", isLoggedIn, validateObjectId, fixAmenities, validateBod
     updateData.serviceFeePct = Number(updateData.serviceFeePct || 3);
     updateData.guests = Number(updateData.guests || 1);
 
+    // --- ADD THIS: Image String-to-Object Mapping ---
+    if (updateData.image && Array.isArray(updateData.image)) {
+        updateData.image = updateData.image
+            .filter(url => url.trim() !== "") // Remove empty inputs
+            .map(url => ({
+                url: url,
+                filename: "listingimage" // Default placeholder
+            }));
+    }
+
     // 3. Logic for isVerified (Boolean Conversion)
-    // Only allow update if isVerified is present in the request
     if (updateData.isVerified !== undefined) {
-        // Form sends "true"/"false" as strings, we need actual Booleans
         updateData.isVerified = updateData.isVerified === "true";
     }
 
     // 4. Security: If NOT an admin, delete isVerified from updateData 
-    // This prevents malicious users from injecting "isVerified: true" via Postman
     if (!isAdmin) {
         delete updateData.isVerified;
     }
@@ -562,6 +576,8 @@ app.put("/listings/:id", isLoggedIn, validateObjectId, fixAmenities, validateBod
     req.flash("success", "Updated successfully!");
     res.redirect(`/listings/${id}`);
 }));
+
+
 
 app.delete("/listings/:id", isLoggedIn, validateObjectId, asyncWrap(async (req, res) => {
     const { id } = req.params;
