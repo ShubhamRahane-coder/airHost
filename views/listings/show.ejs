@@ -92,7 +92,7 @@
 
     <div class="col-12 mb-4">
       <div class="show-img-container shadow-sm position-relative">
-        <img src="<%= listing.image.url %>" class="show-img rounded-4" alt="<%= listing.title %>">
+        <img src="<%= listing.image.url || '/default.jpg' %>" class="show-img rounded-4" alt="<%= listing.title %>">
         <% if (listing.price > 10000) { %>
           <div class="premium-badge">Premium Stay</div>
         <% } %>

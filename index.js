@@ -420,7 +420,7 @@ app.get("/", asyncWrap(async (req, res) => {
 
     const listings = await Listing.find({ isVerified: true })
         .populate("owner", "username")
-        .limit(20);
+        .limit(15);
 
     const totalListings = await Listing.countDocuments({ isVerified: true });
 

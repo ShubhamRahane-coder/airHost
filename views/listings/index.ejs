@@ -11,11 +11,11 @@
                 <a href="/listings/<%= listing._id %>" class="listing-link w-100">
                     <div class="card h-100 air-card shadow-sm border-0">
                         <div class="img-container">
-                            <img src="<%= listing.image.url %>" 
+                            <img src="<%= listing.image.url || '/default.jpg' %> " 
                                  class="card-img-top listing-img" 
                                  alt="<%= listing.title %>"
                                  loading="lazy"
-                                 onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
+                                 onerror="this.src=`https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop`">
                             
                             <div class="wishlist-icon">
                                 <span class="material-symbols-outlined fs-5">favorite</span>
