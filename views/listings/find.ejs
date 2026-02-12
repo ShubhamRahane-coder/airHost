@@ -15,12 +15,12 @@
                     <a href="/listings/<%= listing._id %>" class="listing-link">
                         <div class="card h-100 listing-card air-card shadow-sm">
                             <div class="img-container overflow-hidden">
-                                <img src="<%= listing.image.url %>" 
-                                     class="card-img-top listing-img" 
-                                     alt="<%= listing.title %>"
-                                     loading="lazy"
-                                     onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
-                                
+                                <img src="<%= (listing.image && listing.image.length > 0) ? listing.image[0].url : 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop' %>" 
+                                        class="card-img-top listing-img" 
+                                        style="object-fit: cover; min-height: 200px;"
+                                       alt="<%=listing.title %>"
+                                       loading="lazy"
+                                       onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
                                 <div class="wishlist-icon">
                                     <span class="material-symbols-outlined">favorite</span>
                                 </div>

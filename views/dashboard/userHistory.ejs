@@ -33,7 +33,12 @@
                     <div class="card border-0 shadow-sm rounded-5 trip-card">
                         <div class="row g-0">
                             <div class="col-md-3 position-relative overflow-hidden rounded-start-5">
-                                <img src="<%= resv.listing.image.url %>" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 200px;" alt="Property">
+                                 <img src="<%= (resv.listing.image && resv.listing.image.length > 0) ? resv.listing.image[0].url : 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop' %>" 
+                                       class="img-fluid h-100 w-100" 
+                                        style="object-fit: cover; min-height: 200px;"
+                                       alt="<%= resv.listing.title %>"
+                                       loading="lazy"
+                                       onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
                                 <div class="image-overlay"></div>
                             </div>
                             

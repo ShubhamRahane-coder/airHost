@@ -113,7 +113,13 @@
                                 <div class="col-md-6">
                                     <div class="card border-0 shadow-sm rounded-4 h-100 property-redirect-card">
                                         <div class="position-relative overflow-hidden rounded-top-4">
-                                            <img src="<%= listing.image.url %>" class="card-img-top property-img" style="height: 140px; object-fit: cover;" alt="listing">
+                                           
+                                            <img src="<%= (listing.image && listing.image.length > 0) ? listing.image[0].url : 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop' %>" 
+                                       class="card-img-top property-img" 
+                                        style="height: 140px; object-fit: cover;" 
+                                       alt="<%= listing.title %>"
+                                       loading="lazy"
+                                       onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
                                             <div class="price-glass-badge">₹<%= listing.price.toLocaleString("en-IN") %></div>
                                         </div>
                                         <div class="card-body p-3 d-flex flex-column">

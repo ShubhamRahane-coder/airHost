@@ -208,7 +208,7 @@ app.get("/admin/all-listings", isLoggedIn, asyncWrap(async (req, res) => {
 
     // 2. Fetch all listings and populate owner details
     const allListings = await Listing.find({})
-        .populate("owner", "username email")
+        .populate("owner", "username email phone location") // Populate owner with more details for admin view
         .sort({ createdAt: -1 });
 
     // 3. Render the page (Passing 'listings' and 'title' to prevent errors)
