@@ -4,8 +4,8 @@
 <nav id="mainNav" class="navbar navbar-expand-lg fixed-top bg-light border-bottom" style="height:100px; z-index:2000;">
   <div class="container-fluid" style="max-width:1824px; display:flex; align-items:center; justify-content:space-between;">
 
-    <a class="navbar-brand d-flex align-items-center text-danger fs-2" href="/" style="font-weight: 600;">
-      <span class="material-symbols-outlined me-1 fs-1">assistant_navigation</span> airHost
+    <a class="navLogo navbar-brand d-flex align-items-center text-danger fs-2 fs-md-4" href="/" style="font-weight: 600;">
+      <span class="material-symbols-outlined me-1 fs-1 fs-md-2">assistant_navigation</span> airHost
     </a>
 
     <form action="/listings/find" method="post" class="d-none d-lg-flex flex-grow-1 justify-content-center">
@@ -73,7 +73,7 @@
 
     <ul class="navbar-nav d-flex align-items-center gap-2 flex-row">
       <li class="nav-item">
-        <a class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold" href="/listings/new">Become a Host</a>
+        <a class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold navBecomehost" href="/listings/new">Become a Host</a>
       </li>
       <li class="nav-item position-relative">
         <button class="btn rounded-pill nav_btn_account d-flex align-items-center gap-2 shadow-sm" id="accountBtn">
@@ -127,7 +127,7 @@
       </li>
       <li class="nav-item d-lg-none">
        <button class="btn rounded-circle nav_btn_third" id="mobileMenuBtn" style="width: 44px; height: 44px;display: flex;  align-items: center; justify-content: center;">
-          <span class="material-symbols-outlined">menu_open</span>
+          <span class="material-symbols-outlined menuOpen">menu_open</span>
         </button>
       </li>
     </ul>
@@ -256,6 +256,67 @@
   .form-control:focus {
     background-color: transparent !important;
   }
+
+
+/* Mobile default (below 576px) */
+.navLogo {
+  font-size: 1.8rem;
+}
+
+.navLogo span {
+  font-size: 1.5rem;
+}
+
+/* sm (≥576px) */
+@media (min-width: 576px) {
+  .navLogo {
+    font-size: 2.3rem;
+  }
+}
+
+/* md (≥768px) */
+@media (min-width: 768px) {
+
+  .navbar .navLogo {
+    font-size: 3rem;
+  }
+
+  .navbar .navLogo span {
+    font-size: calc(1.375rem + 2.5vw);
+    letter-spacing: 2px;
+  }
+
+  .navbar .navBecomehost {
+    padding: 8px 20px;
+    font-size: 1.5rem;
+    letter-spacing: -0.2px;
+  }
+
+  .navbar .menu-icon,
+  .navbar .account-icon,
+  .navbar .menuOpen {
+    font-size: 2.5rem;
+  }
+
+  .navbar .menuOpen {
+    padding: 0 10px;
+  }
+
+}
+
+
+/* lg (≥992px) */
+@media (min-width: 992px) {
+  .navLogo {
+    font-size: 2rem;
+  }
+
+  .navLogo span {
+    font-size: calc(1.375rem + 1vw);
+  }
+}
+
+
 </style>
 
 <script>

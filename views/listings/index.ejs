@@ -28,14 +28,14 @@
                         
                         <div class="card-body p-3 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <p class="card-title mb-0 fw-bold text-truncate small"><%= listing.title %></p>
+                                <p id="listing-title" class="card-title mb-0 fw-bold text-truncate listing-title"><%= listing.title %></p>
                                 <div class="d-flex align-items-center flex-shrink-0">
                                     <span class="material-symbols-outlined star-icon">star</span>
                                     <span class="extra-small fw-semibold ms-1">New</span>
                                 </div>
                             </div>
                             
-                            <p class="text-muted extra-small mb-2 text-truncate">
+                            <p class="text-muted fs-6 mb-2 text-truncate">
                                 <%= listing.location %>, <%= listing.country %>
                             </p>
                             
@@ -146,27 +146,46 @@
     .listing-link { text-decoration: none !important; color: inherit; }
 
     /* Mobile Responsive Ratio */
-    @media (max-width: 576px) {
-        .img-container { aspect-ratio: 3 / 2; }
-    }
-/* Force exactly 2 columns on mobile (below 576px) */
-@media (max-width: 575px) {
-    .row-cols-2 > * {
-        flex: 0 0 auto;
-        width: 50% !important;
-    }
-    
-    /* Reduce padding/font size for mobile so 2 cards fit nicely */
-    .card-body {
-        padding: 0.75rem !important;
-    }
-    
-    .card-title {
-        font-size: 0.75rem !important;
-    }
+   /* Image ratio for mobile */
+@media (max-width: 575.98px) {
+  .img-container {
+    aspect-ratio: 3 / 2;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  .card-title {
+    font-size: 0.85rem;
+  }
+
+  #listing-title {
+    font-size: 1rem;
+  }
 }
 
+/* Tablet */
+@media (min-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
 
+  #listing-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1024px) {
+  .card-title {
+    font-size: 1.4rem;
+  }
+
+  #listing-title {
+    font-size: 1rem;
+  }
+}
 
 
 </style>
