@@ -472,36 +472,65 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 });
 
 
-app.post("/listings/createListing", isLoggedIn, fixAmenities, validateBody(listingSchema), asyncWrap(async (req, res) => {
+app.post("/listings/createListing",
+  isLoggedIn,
+  fixAmenities,
+  validateBody(listingSchema),
+  asyncWrap(async (req, res) => {
+
     const { listing } = req.body;
 
-    // 1. Transform String Array to Object Array for Mongoose
+    // 1. Transform Image Strings → Object Array
     if (listing.image && Array.isArray(listing.image)) {
         listing.image = listing.image
-            .filter(url => url.trim() !== "") // Remove the last empty auto-generated box
+            .filter(url => url.trim() !== "")
             .map(url => ({
                 url: url,
-                filename: "listingimage" // Provide a default filename
+                filename: "listingimage"
             }));
     }
 
-    // 2. Ensure Numeric Fields are valid
+    // 2. Convert Numeric Fields
     listing.price = Number(listing.price);
     listing.cleaningFee = Number(listing.cleaningFee || 0);
     listing.serviceFeePct = Number(listing.serviceFeePct || 3);
     listing.guests = Number(listing.guests || 1);
 
-    // 3. Create the Listing with transformed data
-    const newListing = new Listing({ 
-        ...listing, 
-        owner: req.session.userId 
+    // 3. Create Listing
+    const newListing = new Listing({
+        ...listing,
+        owner: req.session.userId
     });
 
     await newListing.save();
-    
-    req.flash("success", "New airHost listing created!");
-    res.redirect(`/listings/${newListing._id}`);
+
+    // ... existing logic up to newListing.save()
+
+req.flash("success", "New airHost listing created!");
+
+// Improved Script for Popup Handling
+res.send(`
+    <script>
+        if (window.opener && !window.opener.closed) {
+            // 1. Tell the main window to go to the new listing
+            window.opener.location.href = "/listings/${newListing._id}";
+            
+            // 2. Optional: Refresh parent data if they stay on the same page
+            // window.opener.location.reload(); 
+
+            // 3. Close this popup immediately or after a short delay
+            setTimeout(() => {
+                window.close();
+            }, 500);
+        } else {
+            // Fallback: If no opener, just redirect this window
+            window.location.href = "/listings/${newListing._id}";
+        }
+    </script>
+`);
+
 }));
+
 
 app.get("/listings/:id", validateObjectId, asyncWrap(async (req, res) => {
     const listing = await Listing.findById(req.params.id)
@@ -530,52 +559,76 @@ app.get("/listings/:id/edit", isLoggedIn, validateObjectId, asyncWrap(async (req
     });
 }));
 
-app.put("/listings/:id", isLoggedIn, validateObjectId, fixAmenities, validateBody(listingSchema), asyncWrap(async (req, res) => {
+app.put(
+  "/listings/:id",
+  isLoggedIn,
+  validateObjectId,
+  fixAmenities,
+  validateBody(listingSchema),
+  asyncWrap(async (req, res) => {
     const { id } = req.params;
+
     const listing = await Listing.findById(id);
-    
-    // Authorization Check
+
+    // 🔐 Authorization Check
     const isAdmin = res.locals.currentUser?.role === "admin";
+
     if (!listing.owner.equals(req.session.userId) && !isAdmin) {
-        req.flash("error", "Unauthorized.");
-        return res.redirect(`/listings/${id}`);
+      req.flash("error", "Unauthorized.");
+      return res.redirect(`/listings/${id}`);
     }
 
-    // 1. Extract cleaned data from body
+    // 1️⃣ Extract Data
     const updateData = { ...req.body.listing };
 
-    // 2. Clean up Numeric Fields
+    // 2️⃣ Clean Numeric Fields
     updateData.price = Number(updateData.price);
     updateData.cleaningFee = Number(updateData.cleaningFee || 0);
     updateData.serviceFeePct = Number(updateData.serviceFeePct || 3);
     updateData.guests = Number(updateData.guests || 1);
 
-    // --- ADD THIS: Image String-to-Object Mapping ---
+    // 3️⃣ Image String → Object Mapping
     if (updateData.image && Array.isArray(updateData.image)) {
-        updateData.image = updateData.image
-            .filter(url => url.trim() !== "") // Remove empty inputs
-            .map(url => ({
-                url: url,
-                filename: "listingimage" // Default placeholder
-            }));
+      updateData.image = updateData.image
+        .filter((url) => url.trim() !== "")
+        .map((url) => ({
+          url: url,
+          filename: "listingimage",
+        }));
     }
 
-    // 3. Logic for isVerified (Boolean Conversion)
+    // 4️⃣ Convert isVerified String → Boolean
     if (updateData.isVerified !== undefined) {
-        updateData.isVerified = updateData.isVerified === "true";
+      updateData.isVerified = updateData.isVerified === "true";
     }
 
-    // 4. Security: If NOT an admin, delete isVerified from updateData 
+    // 5️⃣ Security: Non-admin cannot change verification
     if (!isAdmin) {
-        delete updateData.isVerified;
+      delete updateData.isVerified;
     }
 
-    // 5. Update the Database
-    await Listing.findByIdAndUpdate(id, updateData, { runValidators: true });
+    // 6️⃣ Update Database
+    await Listing.findByIdAndUpdate(id, updateData, {
+      runValidators: true,
+      new: true,
+    });
 
     req.flash("success", "Updated successfully!");
-    res.redirect(`/listings/${id}`);
-}));
+
+    // 7️⃣ Close tab + Refresh parent
+    res.send(`
+      <script>
+        if (window.opener) {
+            window.opener.location.reload();
+            window.close();
+        } else {
+            window.location.href = "/listings/${id}";
+        }
+      </script>
+    `);
+  })
+);
+
 
 
 

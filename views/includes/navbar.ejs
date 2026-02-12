@@ -73,7 +73,20 @@
 
     <ul class="navbar-nav d-flex align-items-center gap-2 flex-row">
       <li class="nav-item">
-        <a class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold navBecomehost" href="/listings/new">Become a Host</a>
+        <a href="/listings/new"
+   class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold navBecomehost"
+   style="color: #2b2727 !important;"
+   onclick="openHostPage(event)">
+   Become a Host
+</a>
+
+<script>
+function openHostPage(e) {
+    e.preventDefault();
+    window.open("/listings/new", "_blank");
+}
+</script>
+
       </li>
       <li class="nav-item position-relative">
         <button class="btn rounded-pill nav_btn_account d-flex align-items-center gap-2 shadow-sm" id="accountBtn">

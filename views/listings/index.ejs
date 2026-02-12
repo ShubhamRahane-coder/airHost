@@ -8,7 +8,7 @@
     <div id="listingContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
         <% for(let listing of listings) { %>
             <div class="col d-flex">
-                <a href="/listings/<%= listing._id %>" class="listing-link w-100">
+                <a href="/listings/<%= listing._id %>" class="listing-link w-100" >
                     <div class="card h-100 air-card shadow-sm border-0">
                         <div class="img-container">
                             <img src="<%= (listing.image && listing.image.length > 0) ? listing.image[0].url : 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop' %>" 
@@ -21,8 +21,8 @@
                                 <span class="material-symbols-outlined fs-5">favorite</span>
                             </div>
 
-                            <% if(listing.price > 10000) { %>
-                                <div class="category-badge">Premium</div>
+                            <% if(listing.price > 3000) { %>
+                                <div class="category-badge"><%= listing.badgesCategory%></div>
                             <% } %>
                         </div>
                         

@@ -8,143 +8,118 @@
         </h2>
     </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4">
         <% if (listings && listings.length > 0) { %>
             <% for(let listing of listings) { %>
                 <div class="col">
                     <a href="/listings/<%= listing._id %>" class="listing-link">
-                        <div class="card h-100 listing-card air-card shadow-sm">
-                            <div class="img-container overflow-hidden">
+                        <div class="card h-100 listing-card air-card shadow-sm border-0">
+                            <div class="img-container">
                                 <img src="<%= (listing.image && listing.image.length > 0) ? listing.image[0].url : 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop' %>" 
                                         class="card-img-top listing-img" 
-                                        style="object-fit: cover; min-height: 200px;"
-                                       alt="<%=listing.title %>"
-                                       loading="lazy"
-                                       onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
+                                        alt="<%=listing.title %>"
+                                        loading="lazy"
+                                        onerror="this.src='https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop'">
+                                
                                 <div class="wishlist-icon">
                                     <span class="material-symbols-outlined">favorite</span>
+                                </div>
+
+                                <div class="badge-container">
+                                    <% if (!listing.isVerified) { %>
+                                        <div class="category-badge" style="background: #ff385c; color: #fff;">
+                                            <i class="fa-solid fa-clock-rotate-left me-1"></i> Unverified
+                                        </div>
+                                    <% } %>
+
+                                    <% if(listing.price > 3000) { %>
+                                        <div class="category-badge ms-auto" style="background: rgba(255,255,255,0.9); color: #222;">
+                                            <i class="fa-solid fa-crown me-1 text-warning"></i> <%= listing.badgesCategory  %>
+                                        </div>
+                                    <% } %>
                                 </div>
                             </div>
                             
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <p class="card-title mb-0 fw-bold text-truncate"><%= listing.title %></p>
+                                    <p class="card-title mb-0 fw-bold text-truncate pe-2"><%= listing.title %></p>
                                     <div class="d-flex align-items-center flex-shrink-0">
                                         <span class="material-symbols-outlined fs-6 me-1 star-filled">star</span>
                                         <span class="small fw-semibold">New</span>
                                     </div>
                                 </div>
                                 <p class="text-muted small mb-1"><%= listing.location %>, <%= listing.country %></p>
-                                <p class="card-text price-text mt-2">
+                                <div class="mt-2">
                                     <span class="fw-bold fs-5 text-dark">&#8377; <%= listing.price.toLocaleString("en-IN") %></span> 
-                                    <span class="text-secondary fw-light">night</span>
-                                </p>
+                                    <span class="text-secondary fw-light small">night</span>
+                                </div>
                             </div>
                         </div>
                     </a>
                 </div>
             <% } %>
-        <% } else { %>
-            <div class="col-12 text-center py-5">
-                <div class="py-5">
-                    <span class="material-symbols-outlined display-1 text-muted opacity-25">home_work</span>
-                    <h3 class="mt-3 text-secondary">We couldn't find any results</h3>
-                    <a href="/" class="btn btn-pink rounded-pill px-5 py-2 mt-2 shadow-sm">Clear Search</a>
-                </div>
-            </div>
         <% } %>
-    </div>
-
-    <div class="mt-5 mb-5 p-4 p-lg-5 bg-white border border-light-subtle rounded-5 shadow-sm mx-auto" style="max-width: 900px;">
-        <div class="d-flex align-items-center mb-4">
-            <span class="material-symbols-outlined me-2 text-pink">info</span>
-            <h4 class="mb-0 fw-bold">Search Details</h4>
-        </div>
-        
-        <div class="row g-4 text-center text-md-start">
-            <div class="col-12 col-md-4">
-                <label class="small text-uppercase fw-bold text-muted tracking-wider">Location</label>
-                <div class="fs-5 fw-semibold text-dark"><%= searchData.location || "Anywhere" %></div>
-            </div>
-            <div class="col-6 col-md-4">
-                <label class="small text-uppercase fw-bold text-muted tracking-wider">Stay Period</label>
-                <div class="fs-6 fw-semibold text-dark">
-                    <%= searchData.startDate || "Flexible" %> <br class="d-none d-md-block"> to <%= searchData.endDate || "Flexible" %>
-                </div>
-            </div>
-            <div class="col-6 col-md-4">
-                <label class="small text-uppercase fw-bold text-muted tracking-wider">Travelers</label>
-                <div class="fs-5 fw-semibold text-dark">
-                    <% let total = (parseInt(searchData.adults) || 0) + (parseInt(searchData.children) || 0); %>
-                    <%= total > 0 ? total + " Guests" : "No guests added" %>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
 <style>
-    /* 1. New Card Border & Shadow Logic */
-    .air-card {
-        background-color: #fff;
-        border: 1px solid #e0e0e0 !important; /* Subtle border */
-        border-radius: 1.25rem !important;    /* Modern rounded corners (20px) */
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        overflow: hidden;
-    }
-
-    /* 2. Enhanced Hover Effect */
-    .listing-card:hover {
-        transform: translateY(-6px); /* Slight lift */
-        border-color: #ff385c !important; /* Optional: border turns pink on hover */
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12) !important; /* Deeper shadow */
-    }
-
-    /* 3. Image Handling within Card */
     .img-container {
-        border-radius: 1.25rem 1.25rem 0 0; /* Match top corners */
         position: relative;
+        width: 100%;
+        aspect-ratio: 3 / 2; /* Uniform ratio for all screen sizes */
+        overflow: hidden;
+        border-radius: 1rem 1rem 0 0;
     }
 
     .listing-img {
-        aspect-ratio: 1 / 1;
-        object-fit: cover;
         width: 100%;
-        transition: transform 0.6s ease;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
     }
 
-    .listing-card:hover .listing-img {
-        transform: scale(1.06);
+    .air-card {
+        border-radius: 1rem !important;
+        transition: transform 0.3s ease;
+        border: 1px solid #e0e0e0 !important;
     }
 
-    /* Keep existing wishlist and button logic */
+    .air-card:hover .listing-img {
+        transform: scale(1.08);
+    }
+
+    .badge-container {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        gap: 5px;
+        z-index: 5;
+    }
+
+    .category-badge {
+        font-size: 9px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
     .text-pink { color: #ff385c; }
     .listing-link { text-decoration: none !important; color: inherit !important; }
     
     .wishlist-icon {
         position: absolute;
-        top: 15px;
-        right: 15px;
+        top: 12px;
+        right: 12px;
         z-index: 5;
         color: white;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
 
-    .star-filled {
-        font-variation-settings: 'FILL' 1, 'wght' 400;
-        color: #222;
-    }
+    .star-filled { font-variation-settings: 'FILL' 1; color: #222; }
 
-    .btn-pink {
-        background-color: #ff385c;
-        border: none;
-        color: white;
-        font-weight: 600;
-    }
-
-    .btn-pink:hover { background-color: #e31c5f; color: white; }
-
-    @media (max-width: 576px) {
-        .listing-img { aspect-ratio: 4 / 3; }
-    }
+    /* No media query override for aspect-ratio ensures 3:2 stays constant */
 </style>
