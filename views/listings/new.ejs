@@ -124,10 +124,20 @@
     </div>
 
   <div>
-    <label for="description" class="form-label air-label">About the space</label>
-    <textarea id="description" name="listing[description]" class="form-control air-input" 
-              style="min-height:150px;" required placeholder="Share what makes your place special..."></textarea>
-  </div>
+    <label for="description" class="form-label air-label">About this place</label>
+    <textarea 
+        id="description" 
+        name="listing[description]" 
+        class="form-control air-input" 
+        style="min-height:150px;" 
+        required 
+        minlength="10" 
+        placeholder="Share what makes your place special..."
+    ></textarea>
+    <div class="invalid-feedback">
+        Description must be at least 10 characters long.
+    </div>
+</div>
 </section>
 
 <section>
@@ -169,25 +179,44 @@
   </div>
 </section>
 
-        <section>
-          <h6 class="section-title">5. Essentials & Features</h6>
-          <div class="card border-0 bg-dark text-white rounded-5 p-4 shadow-sm">
-            <p class="extra-small fw-bold mb-3" style="color: #aaa; letter-spacing: 1px;">Toggle Available Amenities</p>
-            <div class="row g-4">
-              <% const amenityKeys = ['wifi', 'ac', 'pool', 'kitchen', 'parking', 'gym']; %>
-              <% amenityKeys.forEach(key => { %>
-                <div class="col-6 col-md-4">
-                  <div class="form-check form-switch custom-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" name="listing[amenities][<%= key %>]" id="<%= key %>">
-                    <label class="form-check-label small text-white-50" for="<%= key %>">
-                      <%= key === 'wifi' ? 'Fast Wi-Fi' : key.toUpperCase() %>
-                    </label>
-                  </div>
-                </div>
-              <% }) %>
-            </div>
+<section class="mb-5">
+  <h6 class="section-title fw-bold mb-3">5. Essentials & Features</h6>
+  <div class="card border-0 bg-dark text-white rounded-5 p-4 shadow-sm">
+    <p class="extra-small fw-bold mb-3" style="color: #aaa; letter-spacing: 1px; text-transform: uppercase;">Toggle Available Amenities</p>
+    
+    <div class="row g-4">
+      <% 
+        // These keys MUST match your listingSchema.amenities exactly
+        const amenityMap = {
+          wifi: 'Fast Wi-Fi',
+          ac: 'Air Conditioning',
+          kitchen: 'Full Kitchen',
+          parking: 'Free Parking',
+          pool: 'Swimming Pool',
+          gym: 'Fitness Center',
+          workspacer: 'Dedicated Workspace',
+          pets: 'Pets Allowed',
+          cctv: 'CCTV Security'
+        };
+      %>
+
+      <% Object.keys(amenityMap).forEach(key => { %>
+        <div class="col-6 col-md-4">
+          <div class="form-check form-switch custom-switch">
+            <input class="form-check-input" type="checkbox" role="switch" 
+                   name="listing[amenities][<%= key %>]" 
+                   id="<%= key %>"
+                   <%= (typeof listing !== 'undefined' && listing.amenities && listing.amenities[key]) ? 'checked' : '' %>>
+            
+            <label class="form-check-label small text-white-50" for="<%= key %>">
+              <%= amenityMap[key] %>
+            </label>
           </div>
-        </section>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
 
         <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
           <a href="/listings" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
@@ -427,4 +456,23 @@
         });
     }
 });
+</script>
+
+
+
+<!-- for textarea  validations -->
+<script>
+(() => {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
 </script>

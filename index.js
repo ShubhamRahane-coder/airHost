@@ -96,13 +96,21 @@ const validateObjectId = (req, res, next) => {
 // ADD THIS HERE:
 const fixAmenities = (req, res, next) => {
     if (req.body.listing) {
-        req.body.listing.amenities = req.body.listing.amenities || {};
-        const possibleAmenities = ['wifi', 'ac', 'kitchen', 'parking', 'pool', 'gym', 'workspacer', 'pets', 'cctv'];
+        const possibleAmenities = [
+            'wifi', 'ac', 'kitchen', 'parking', 'pool', 
+            'gym', 'workspacer', 'pets', 'cctv'
+        ];
         
+        // Use the incoming data or an empty object if none checked
+        const incoming = req.body.listing.amenities || {};
+        
+        // Rebuild the object to ensure ONLY valid keys exist and all are Boolean
+        const sanitizedAmenities = {};
         possibleAmenities.forEach(key => {
-            // Converts "on" to true, and missing keys (unchecked) to false
-            req.body.listing.amenities[key] = req.body.listing.amenities[key] === 'on';
+            sanitizedAmenities[key] = incoming[key] === 'on';
         });
+
+        req.body.listing.amenities = sanitizedAmenities;
     }
     next();
 };
@@ -477,58 +485,51 @@ app.post("/listings/createListing",
   fixAmenities,
   validateBody(listingSchema),
   asyncWrap(async (req, res) => {
-
     const { listing } = req.body;
 
-    // 1. Transform Image Strings → Object Array
+    // 1. Image Cleanup: Filter empty boxes and trim whitespace
     if (listing.image && Array.isArray(listing.image)) {
         listing.image = listing.image
-            .filter(url => url.trim() !== "")
+            .map(url => url.trim())
+            .filter(url => url !== "")
             .map(url => ({
-                url: url,
+                url,
                 filename: "listingimage"
             }));
     }
 
-    // 2. Convert Numeric Fields
-    listing.price = Number(listing.price);
-    listing.cleaningFee = Number(listing.cleaningFee || 0);
-    listing.serviceFeePct = Number(listing.serviceFeePct || 3);
-    listing.guests = Number(listing.guests || 1);
+    // 2. Data Normalization: Ensure numbers are actually numbers
+    listing.price = Math.abs(Number(listing.price));
+    listing.cleaningFee = Math.abs(Number(listing.cleaningFee || 0));
+    listing.serviceFeePct = Math.min(100, Math.max(0, Number(listing.serviceFeePct || 3)));
+    listing.guests = Math.max(1, Number(listing.guests || 1));
 
-    // 3. Create Listing
+    // 3. Document Creation
     const newListing = new Listing({
         ...listing,
-        owner: req.session.userId
+        owner: req.session.userId,
+        isVerified: false // Admin must verify before it hits index
     });
 
     await newListing.save();
+    
+    // 4. Success Response
+    req.flash("success", "Listing successfully submitted for verification!");
 
-    // ... existing logic up to newListing.save()
-
-req.flash("success", "New airHost listing created!");
-
-// Improved Script for Popup Handling
-res.send(`
-    <script>
-        if (window.opener && !window.opener.closed) {
-            // 1. Tell the main window to go to the new listing
-            window.opener.location.href = "/listings/${newListing._id}";
-            
-            // 2. Optional: Refresh parent data if they stay on the same page
-            // window.opener.location.reload(); 
-
-            // 3. Close this popup immediately or after a short delay
-            setTimeout(() => {
+    // Popup Logic: Closes the "New Listing" tab and updates the main tab
+    res.send(`
+        <script>
+            if (window.opener && !window.opener.closed) {
+                // Redirect the parent window to the new listing
+                window.opener.location.href = "/listings/${newListing._id}";
+                // Close this popup
                 window.close();
-            }, 500);
-        } else {
-            // Fallback: If no opener, just redirect this window
-            window.location.href = "/listings/${newListing._id}";
-        }
-    </script>
-`);
-
+            } else {
+                // Fallback if user refreshed the main tab or closed it
+                window.location.href = "/listings/${newListing._id}";
+            }
+        </script>
+    `);
 }));
 
 
@@ -568,57 +569,64 @@ app.put(
   asyncWrap(async (req, res) => {
     const { id } = req.params;
 
+    // 1. Fetch current listing to check ownership and get fallback values
     const listing = await Listing.findById(id);
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
 
-    // 🔐 Authorization Check
+    // 🔐 Authorization Check (Owner or Admin)
     const isAdmin = res.locals.currentUser?.role === "admin";
-
     if (!listing.owner.equals(req.session.userId) && !isAdmin) {
-      req.flash("error", "Unauthorized.");
+      req.flash("error", "Unauthorized action.");
       return res.redirect(`/listings/${id}`);
     }
 
-    // 1️⃣ Extract Data
+    // 2. Extract and Sanitize Data
     const updateData = { ...req.body.listing };
 
-    // 2️⃣ Clean Numeric Fields
-    updateData.price = Number(updateData.price);
-    updateData.cleaningFee = Number(updateData.cleaningFee || 0);
-    updateData.serviceFeePct = Number(updateData.serviceFeePct || 3);
-    updateData.guests = Number(updateData.guests || 1);
+    // Clean Numeric Fields (Price, Fees, Guests)
+    updateData.price = Math.abs(Number(updateData.price));
+    updateData.cleaningFee = Math.abs(Number(updateData.cleaningFee || 0));
+    updateData.serviceFeePct = Math.min(100, Math.max(0, Number(updateData.serviceFeePct || 3)));
+    updateData.guests = Math.max(1, Number(updateData.guests || 1));
 
-    // 3️⃣ Image String → Object Mapping
+    // Clean Coordinates (Fall back to current DB values if inputs are empty)
+    updateData.lat = updateData.lat ? Number(updateData.lat) : listing.lat;
+    updateData.lng = updateData.lng ? Number(updateData.lng) : listing.lng;
+
+    // 3. Dynamic Image Handling 
+    // This logic allows you to delete specific images by clearing their URL inputs
     if (updateData.image && Array.isArray(updateData.image)) {
       updateData.image = updateData.image
-        .filter((url) => url.trim() !== "")
-        .map((url) => ({
+        .map(url => url.trim())
+        .filter(url => url !== "") // Removes empty strings
+        .map(url => ({
           url: url,
-          filename: "listingimage",
+          filename: "listingimage"
         }));
     }
 
-    // 4️⃣ Convert isVerified String → Boolean
-    if (updateData.isVerified !== undefined) {
+    // 4. Admin-Only Verification logic
+    if (isAdmin && updateData.isVerified !== undefined) {
       updateData.isVerified = updateData.isVerified === "true";
+    } else {
+      delete updateData.isVerified; // Prevent users from verifying themselves
     }
 
-    // 5️⃣ Security: Non-admin cannot change verification
-    if (!isAdmin) {
-      delete updateData.isVerified;
-    }
-
-    // 6️⃣ Update Database
-    await Listing.findByIdAndUpdate(id, updateData, {
-      runValidators: true,
-      new: true,
+    // 5. Update Database
+    await Listing.findByIdAndUpdate(id, updateData, { 
+      runValidators: true, 
+      new: true 
     });
 
-    req.flash("success", "Updated successfully!");
+    req.flash("success", "Listing updated successfully!");
 
-    // 7️⃣ Close tab + Refresh parent
+    // 6. Response for Popup handling
     res.send(`
       <script>
-        if (window.opener) {
+        if (window.opener && !window.opener.closed) {
             window.opener.location.reload();
             window.close();
         } else {

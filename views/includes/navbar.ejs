@@ -73,17 +73,27 @@
 
     <ul class="navbar-nav d-flex align-items-center gap-2 flex-row">
       <li class="nav-item">
-        <a href="/listings/new"
+<a href="/listings/new"
    class="nav-link px-3 py-2 rounded-pill text-dark nav-host-pill fw-semibold navBecomehost"
    style="color: #2b2727 !important;"
-   onclick="openHostPage(event)">
+   onclick="handleBecomeHost(event)">
    Become a Host
 </a>
 
 <script>
-function openHostPage(e) {
-    e.preventDefault();
-    window.open("/listings/new", "_blank");
+function handleBecomeHost(e) {
+    // We check the EJS currentUser variable directly in JS
+    const isLoggedIn = <%= currentUser ? 'true' : 'false' %>;
+
+    if (isLoggedIn) {
+        // If logged in: Prevent default jump and open in NEW tab
+        e.preventDefault();
+        window.open("/listings/new", "_blank");
+    } else {
+        // If NOT logged in: Do NOT prevent default.
+        // The link will open /listings/new in the SAME window,
+        // triggering your server middleware to redirect to /login.
+    }
 }
 </script>
 

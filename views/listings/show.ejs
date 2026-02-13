@@ -111,27 +111,36 @@
           <%= listing.location %>, <%= listing.country %>
         </p>
         
-        <% if (currentUser && (currentUser.role === "admin" || (listing.owner && currentUser._id.toString() === listing.owner._id.toString()))) { %>
-          <div class="d-flex gap-2">
-           <button onclick="openEdit('<%= listing._id %>')" 
-        class="btn btn-air-secondary btn-sm px-3">
-  <span class="material-symbols-outlined fs-6 align-middle me-1">edit</span>
-  Edit
-</button>
+<% if (currentUser && (currentUser.role === "admin" || (listing.owner && currentUser._id.toString() === listing.owner._id.toString()))) { %>
+  <div class="d-flex gap-2">
+    <a href="/listings/<%= listing._id %>/edit" 
+       onclick="handleEditRedirect(event, '<%= listing._id %>')" 
+       class="btn btn-air-secondary btn-sm px-3 d-flex align-items-center">
+      <span class="material-symbols-outlined fs-6 me-1">edit</span>
+      Edit
+    </a>
 
-<script>
-function openEdit(id) {
-  window.open(`/listings/${id}/edit`, "_blank");
-}
-</script>
+    <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" id="listing-delete-form">
+      <button type="button" class="btn btn-air-danger btn-sm px-3 d-flex align-items-center" onclick="openListingDeleteModal()">
+        <span class="material-symbols-outlined fs-6 me-1">delete</span> Delete
+      </button>
+    </form>
+  </div>
 
-            <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" id="listing-delete-form">
-  <button type="button" class="btn btn-air-danger btn-sm px-3" onclick="openListingDeleteModal()">
-    <span class="material-symbols-outlined fs-6 align-middle me-1">delete</span> Delete
-  </button>
-</form>
-          </div>
-        <% } %>
+  <script>
+    function handleEditRedirect(e, id) {
+      const isAuthenticated = <%= currentUser ? 'true' : 'false' %>;
+
+      if (isAuthenticated) {
+        // 1. If Logged In: Stop the normal link behavior and open NEW tab
+        e.preventDefault();
+        window.open(`/listings/${id}/edit`, "_blank");
+      } 
+      // 2. If NOT Logged In: Do nothing. 
+      // The browser will follow the href="/listings/:id/edit" in the SAME tab.
+    }
+  </script>
+<% } %>
       </div>
     </div>
 
