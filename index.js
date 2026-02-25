@@ -444,16 +444,25 @@ app.get("/", asyncWrap(async (req, res) => {
 
 app.post('/listings/find', asyncWrap(async (req, res) => {
     const { location } = req.body;
+
     const filter = location ? { 
+        isVerified: true,  // Only verified listings
         $or: [
             { location: { $regex: location, $options: "i" } }, 
             { country: { $regex: location, $options: "i" } }
         ] 
-    } : {};
+    } : { 
+        isVerified: true   // If no search → still only verified
+    };
     
-    const listings = await Listing.find(filter).populate("owner", "username");
-    // Pass req.body as searchData so the view knows what was searched
-    res.render('listings/find', { listings, searchData: req.body, title: "airHost Search Results" });
+    const listings = await Listing.find(filter)
+        .populate("owner", "username");
+
+    res.render('listings/find', { 
+        listings, 
+        searchData: req.body, 
+        title: "airHost Search Results" 
+    });
 }));
 
 // Route to show only the current user's listings
