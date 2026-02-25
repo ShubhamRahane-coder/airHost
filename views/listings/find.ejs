@@ -60,6 +60,33 @@
             <% } %>
         <% } %>
     </div>
+
+    <div class="mt-5 mb-5 p-4 p-lg-5 bg-white border border-light-subtle rounded-5 shadow-sm mx-auto" style="max-width: 900px;">
+        <div class="d-flex align-items-center mb-4">
+            <span class="material-symbols-outlined me-2 text-pink">info</span>
+            <h4 class="mb-0 fw-bold">Search Details</h4>
+        </div>
+        
+        <div class="row g-4 text-center text-md-start">
+            <div class="col-12 col-md-4">
+                <label class="small text-uppercase fw-bold text-muted tracking-wider">Location</label>
+                <div class="fs-5 fw-semibold text-dark"><%= searchData.location || "Anywhere" %></div>
+            </div>
+            <div class="col-6 col-md-4">
+                <label class="small text-uppercase fw-bold text-muted tracking-wider">Stay Period</label>
+                <div class="fs-6 fw-semibold text-dark">
+                    <%= searchData.startDate || "Flexible" %> <br class="d-none d-md-block"> to <%= searchData.endDate || "Flexible" %>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <label class="small text-uppercase fw-bold text-muted tracking-wider">Travelers</label>
+                <div class="fs-5 fw-semibold text-dark">
+                    <% let total = (parseInt(searchData.adults) || 0) + (parseInt(searchData.children) || 0); %>
+                    <%= total > 0 ? total + " Guests" : "No guests added" %>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
