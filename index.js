@@ -543,15 +543,54 @@ app.post("/listings/createListing",
 
 
 app.get("/listings/:id", validateObjectId, asyncWrap(async (req, res) => {
+
     const listing = await Listing.findById(req.params.id)
-        .populate("owner", "username")
-        .populate({ path: "reviews", populate: { path: "author", select: "username" } });
+        .populate("owner", "username role")
+        .populate({
+            path: "reviews",
+            populate: {
+                path: "author",
+                select: "username"
+            }
+        });
+
     if (!listing) {
         req.flash("error", "Listing not found!");
         return res.redirect("/");
     }
-    res.render("listings/show", { listing, title: listing.title });
+
+    const userId = req.session.userId;
+    const userRole = req.session.userRole;
+
+    // Owner check
+    const isOwner =
+        userId &&
+        listing.owner._id.toString() === userId;
+
+    // Admin check
+    const isAdmin =
+        userRole === "admin";
+
+    // Only block if listing is NOT verified
+    if (!listing.isVerified) {
+
+        if (!isOwner && !isAdmin) {
+
+            req.flash("error", "You cannot view this listing!");
+            return res.redirect("/");
+
+        }
+
+    }
+
+    res.render("listings/show", {
+        listing,
+        title: listing.title
+    });
+
 }));
+
+
 
 app.get("/listings/:id/edit", isLoggedIn, validateObjectId, asyncWrap(async (req, res) => {
     const listing = await Listing.findById(req.params.id);
