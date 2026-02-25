@@ -132,6 +132,7 @@ app.post("/register", validateBody(userRegisterSchema), asyncWrap(async (req, re
         const user = new User({ username, email, password: hashedPassword, phone, location });
         await user.save(); 
         req.session.userId = user._id;
+        req.session.userRole = user.role;
         req.flash("success", `Welcome to airHost, ${username}!`);
         res.redirect("/");
     } catch (e) {
@@ -150,6 +151,7 @@ app.post("/login", asyncWrap(async (req, res) => {
         return res.redirect("/login");
     }
     req.session.userId = user._id;
+    req.session.userRole = user.role;
     req.flash("success", `Welcome back, ${user.username}!`);
     res.redirect("/");
 }));
@@ -560,36 +562,48 @@ app.get("/listings/:id", validateObjectId, asyncWrap(async (req, res) => {
     }
 
     const userId = req.session.userId;
-    const userRole = req.session.userRole;
 
-    // Owner check
+    const isAdmin =
+        res.locals.currentUser?.role === "admin";
+
     const isOwner =
         userId &&
         listing.owner._id.toString() === userId;
 
-    // Admin check
-    const isAdmin =
-        userRole === "admin";
 
-    // Only block if listing is NOT verified
-    if (!listing.isVerified) {
+    /*
+    FINAL PERMISSION LOGIC
+    */
 
-        if (!isOwner && !isAdmin) {
-
-            req.flash("error", "You cannot view this listing!");
-            return res.redirect("/");
-
-        }
-
+    // ✅ Admin → ALL listings
+    if (isAdmin) {
+        return res.render("listings/show", {
+            listing,
+            title: listing.title
+        });
     }
 
-    res.render("listings/show", {
-        listing,
-        title: listing.title
-    });
+    // ✅ Verified → Everyone
+    if (listing.isVerified) {
+        return res.render("listings/show", {
+            listing,
+            title: listing.title
+        });
+    }
+
+    // ✅ Owner → Own listing
+    if (isOwner) {
+        return res.render("listings/show", {
+            listing,
+            title: listing.title
+        });
+    }
+
+    // ❌ Block
+    req.flash("error", "You cannot view this listing!");
+    res.redirect("/");
 
 }));
-
 
 
 app.get("/listings/:id/edit", isLoggedIn, validateObjectId, asyncWrap(async (req, res) => {

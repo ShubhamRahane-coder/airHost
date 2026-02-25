@@ -68,7 +68,12 @@
 <div class="container show-container mt-5">
 
 
-<% if (currentUser && listing.owner && currentUser._id.toString() === listing.owner._id.toString() && !listing.isVerified) { %>
+<% if (!listing.isVerified &&
+    currentUser &&
+    (
+        currentUser._id.equals(listing.owner._id) ||
+        currentUser.role === "admin"
+    )) { %>
     <div class="container mt-4">
         <div class="alert alert-light border-warning shadow-sm rounded-4 p-4 mb-4 d-flex align-items-start" style="border-left: 6px solid #ffc107 !important;">
             <div class="me-3">

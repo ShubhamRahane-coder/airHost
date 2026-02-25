@@ -185,7 +185,7 @@
         required 
         minlength="10" 
         placeholder="Share what makes your place special..."
-    ></textarea>
+    ><%= listing.description || '' %></textarea>
     <div class="invalid-feedback">
         Description must be at least 10 characters long.
     </div>
