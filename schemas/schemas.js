@@ -22,7 +22,6 @@ export const userRegisterSchema = Joi.object({
 
 
 
-
 // ========================
 // LISTING SCHEMA
 // ========================
@@ -32,7 +31,10 @@ export const listingSchema = Joi.object({
       "string.empty": "Title is required for your listing",
     }),
     price: Joi.number().min(0).required(),
-    description: Joi.string().required().min(10),
+    description: Joi.string().required().min(10).messages({
+      "string.min": "Description must be at least 10 characters long",
+      "any.required": "Description is a required field"
+    }),
     location: Joi.string().required(),
     country: Joi.string().required(),
     
@@ -49,23 +51,29 @@ export const listingSchema = Joi.object({
       .allow("", null)
       .default("Standard"),
 
-    // --- ADDED THIS FIELD ---
     isVerified: Joi.boolean()
-      .allow("true", "false") // Allows strings if your form sends them that way
+      .allow("true", "false")
       .default(false),
-    // ------------------------
     
     guests: Joi.number().min(1).required(),
 
-image: Joi.array()
-  .items(
-    Joi.string()
-      .uri()
-      .allow("", null)
-      .trim()
-  )
-  .optional()
-  .default([]),
+    // 1. Updated Image Schema to handle Array of Objects {url, filename}
+    image: Joi.array()
+      .items(
+        Joi.alternatives().try(
+          Joi.string().uri().allow(""), // Handles raw strings if sent
+          Joi.object({                  // Handles our final structured objects
+            url: Joi.string().required(),
+            filename: Joi.string().allow("", null)
+          })
+        )
+      )
+      .optional()
+      .default([]),
+
+    // 2. CRITICAL: Allow the temporary fileImages field from Multer
+    // This stops Joi from throwing "fileImages is not allowed" errors
+    fileImages: Joi.any().optional(),
     
     cleaningFee: Joi.number().min(0).allow("", null).default(0),
     serviceFeePct: Joi.number().min(0).max(100).allow("", null).default(3),

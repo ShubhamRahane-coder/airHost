@@ -1,0 +1,492 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="listing-form-wrapper py-5">
+  <div class="container" style="max-width: 850px;">
+    
+    <div class="mb-5 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <a href="/listings" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:45px; height:45px;">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <div>
+          <h2 class="fw-bold mb-0">List Your Space</h2>
+          <p class="text-muted small mb-0">Step into the world of hosting</p>
+        </div>
+      </div>
+      <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
+        <i class="fa-solid fa-plus text-primary me-1"></i> Creation Mode
+      </span>
+    </div>
+
+    <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
+      <form action="/listings/createListing" method="POST" class="d-flex flex-column gap-5 needs-validation" novalidate>
+
+        <section>
+          <h6 class="section-title">1. Property Identity</h6>
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label for="title" class="form-label air-label">Property Title</label>
+              <input id="title" name="listing[title]" type="text" class="form-control air-input" 
+                     placeholder="e.g. Modern Loft in the City Center" required>
+              <div class="invalid-feedback">Please provide a catchy title.</div>
+            </div>
+           <div class="row g-3">
+  <div class="col-md-8">
+    <label for="category" class="form-label air-label">Stay Style</label>
+    <select name="listing[category]" id="category" class="form-select air-input" required onchange="updateCategoryHint()">
+      <option value="" disabled <%= (typeof listing === 'undefined' || !listing.category) ? 'selected' : '' %>>Choose a type...</option>
+      <optgroup label="Stay Styles">
+        <% ["Rooms", "Hotels", "Entire Home"].forEach(cat => { %>
+          <option value="<%= cat %>" <%= (typeof listing !== 'undefined' && listing.category === cat) ? 'selected' : '' %>><%= cat %></option>
+        <% }) %>
+      </optgroup>
+      <optgroup label="Nature & Unique">
+        <% ["Cabins", "Luxe"].forEach(cat => { %>
+          <option value="<%= cat %>" <%= (typeof listing !== 'undefined' && listing.category === cat) ? 'selected' : '' %>><%= cat %></option>
+        <% }) %>
+      </optgroup>
+    </select>
+  </div>
+
+  <% const activeUser = (typeof currUser !== 'undefined') ? currUser : (typeof currentUser !== 'undefined' ? currentUser : null); %>
+  
+  <% if (activeUser && activeUser.role === "admin") { %>
+    <div class="col-md-4">
+      <label for="badgesCategory" class="form-label air-label">
+        <i class="fa-solid fa-shield-check text-primary me-1"></i> Admin Badge
+      </label>
+      <select name="listing[badgesCategory]" id="badgesCategory" class="form-select air-input">
+        <option value="" <%= (typeof listing === 'undefined' || !listing.badgesCategory) ? 'selected' : '' %>>None</option>
+        <% ["Standard", "Premium", "Budget", "Luxury", "Trending", "Popular", "New", "Top Rated", "Featured", "Iconic"].forEach(badge => { %>
+          <option value="<%= badge %>" <%= (typeof listing !== 'undefined' && listing.badgesCategory === badge) ? 'selected' : '' %>><%= badge %></option>
+        <% }) %>
+      </select>
+    </div>
+  <% } else { %>
+    <input type="hidden" name="listing[badgesCategory]" value="<%= (typeof listing !== 'undefined' && listing.badgesCategory) ? listing.badgesCategory : 'Standard' %>">
+  <% } %>
+</div>
+        </section>
+
+        <section id="Pricing_Capacity_input">
+          <h6 class="section-title">2. Pricing & Capacity</h6>
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label for="price" class="form-label air-label">Nightly Rate</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
+                <input id="price" name="listing[price]" type="number" class="form-control air-input border-start-0" 
+                       placeholder="0" required min="100">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="cleaningFee" class="form-label air-label">Cleaning Fee</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">₹</span>
+                <input id="cleaningFee" name="listing[cleaningFee]" type="number" class="form-control air-input border-start-0" 
+                       value="0">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="serviceFeePct" class="form-label air-label">Service Fee (%)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 air-input-group">%</span>
+                <input id="serviceFeePct" name="listing[serviceFeePct]" type="number" class="form-control air-input border-start-0" 
+                       value="3" min="0" max="100">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="guests" class="form-label air-label">Max Guests</label>
+              <input id="guests" name="listing[guests]" type="number" class="form-control air-input" 
+                     value="1" required min="1">
+            </div>
+          </div>
+        </section>
+<section id="media-section">
+  <h6 class="section-title">3. Media & Story</h6>
+  
+  <div class="mb-4">
+    <label class="form-label air-label">Property Gallery</label>
+    <p class="text-muted extra-small mb-3" style="font-size: 0.65rem; letter-spacing: 1px;">
+        UPLOAD FILES OR PASTE URLS. INDIVIDUAL IMAGES CAN BE REMOVED BELOW.
+    </p>
+    
+    <div class="mb-3">
+        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="document.getElementById('file-input').click()">
+            <i class="fa-solid fa-file-image me-2"></i>Upload from Device
+        </button>
+        <input type="file" id="file-input" name="listing[fileImages]" class="d-none" multiple accept="image/*">
+    </div>
+
+    <div id="image-input-container" class="d-flex flex-column gap-2 mb-3">
+      <div class="image-group">
+        <input name="listing[image][]" type="text" class="form-control air-input image-url-input" 
+               placeholder="Or paste an image URL...">
+      </div>
+    </div>
+
+    <div id="gallery-preview-grid" class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+        </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="description" class="form-label air-label">About this place</label>
+    <textarea 
+        id="description" 
+        name="listing[description]" 
+        class="form-control air-input" 
+        style="min-height:150px;" 
+        required 
+        minlength="10" 
+        placeholder="Share what makes your place special (minimum 10 characters)..."
+    ></textarea>
+    <div class="invalid-feedback">
+        Description must be at least 10 characters long.
+    </div>
+  </div>
+</section>
+
+<section>
+  <h6 class="section-title">4. Location & Coordinates</h6>
+  <div class="row g-3">
+    <div class="col-md-8">
+      <label for="location" class="form-label air-label">City/State</label>
+      <input id="location" name="listing[location]" type="text" class="form-control air-input" 
+             placeholder="e.g. Mumbai, Maharashtra" required 
+             value="<%= (typeof listing !== 'undefined' && listing.location) ? listing.location : '' %>">
+      <div class="invalid-feedback">Please provide a location.</div>
+    </div>
+
+    <div class="col-md-4">
+      <label for="country" class="form-label air-label">Country</label>
+      <input id="country" name="listing[country]" type="text" class="form-control air-input" 
+             placeholder="India" required 
+             value="<%= (typeof listing !== 'undefined' && listing.country) ? listing.country : 'India' %>">
+    </div>
+
+    <div class="col-md-6">
+      <label for="lat" class="form-label air-label">
+        <i class="fa-solid fa-location-crosshairs text-muted me-1"></i> Latitude
+      </label>
+      <input id="lat" name="listing[lat]" type="number" step="any" class="form-control air-input" 
+             placeholder="e.g. 18.8797">
+      <div class="form-text extra-small" style="color: #aaa;">Used for precise map placement</div>
+    </div>
+  
+
+    <div class="col-md-6">
+      <label for="lng" class="form-label air-label">
+        <i class="fa-solid fa-location-crosshairs text-muted me-1"></i> Longitude
+      </label>
+      <input id="lng" name="listing[lng]" type="number" step="any" class="form-control air-input" 
+             placeholder="e.g. 72.1402" >
+      <div class="form-text extra-small" style="color: #aaa;">Used for precise map placement</div>
+    </div>
+  </div>
+</section>
+
+<section class="mb-5">
+  <h6 class="section-title fw-bold mb-3">5. Essentials & Features</h6>
+  <div class="card border-0 bg-dark text-white rounded-5 p-4 shadow-sm">
+    <p class="extra-small fw-bold mb-3" style="color: #aaa; letter-spacing: 1px; text-transform: uppercase;">Toggle Available Amenities</p>
+    
+    <div class="row g-4">
+      <% 
+        // These keys MUST match your listingSchema.amenities exactly
+        const amenityMap = {
+          wifi: 'Fast Wi-Fi',
+          ac: 'Air Conditioning',
+          kitchen: 'Full Kitchen',
+          parking: 'Free Parking',
+          pool: 'Swimming Pool',
+          gym: 'Fitness Center',
+          workspacer: 'Dedicated Workspace',
+          pets: 'Pets Allowed',
+          cctv: 'CCTV Security'
+        };
+      %>
+
+      <% Object.keys(amenityMap).forEach(key => { %>
+        <div class="col-6 col-md-4">
+          <div class="form-check form-switch custom-switch">
+            <input class="form-check-input" type="checkbox" role="switch" 
+                   name="listing[amenities][<%= key %>]" 
+                   id="<%= key %>"
+                   <%= (typeof listing !== 'undefined' && listing.amenities && listing.amenities[key]) ? 'checked' : '' %>>
+            
+            <label class="form-check-label small text-white-50" for="<%= key %>">
+              <%= amenityMap[key] %>
+            </label>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+        <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
+          <a href="/listings" class="btn btn-outline-dark px-5 py-3 rounded-pill fw-bold order-2 order-md-1">Cancel</a>
+          <button type="submit" id="submitBtn" class="btn btn-launch flex-grow-1 py-3 rounded-pill fw-bold shadow-sm order-1 order-md-2">
+  <span id="btnText">Launch My Listing</span>
+  <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root { --air-red: #ff385c; --air-black: #222222; }
+  .listing-form-wrapper { background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%); min-height: 100vh; }
+  .rounded-5 { border-radius: 1.5rem !important; }
+  .section-title { font-weight: 800; text-transform: uppercase; color: #b0b0b0; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 15px; }
+  .section-title::after { content: ""; height: 1px; flex-grow: 1; background: #e0e0e0; }
+  .air-label { font-size: 0.88rem; color: #222; margin-bottom: 8px; font-weight: 600 !important; display: block; }
+  .extra-small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; }
+  .air-input { border-radius: 12px !important; padding: 12px 18px; border: 1px solid #b0b0b0; background: #fff; transition: all 0.3s ease; font-size: 0.95rem; }
+  .air-input:focus {  border-color: var(--air-black); box-shadow: 0 0 0 1px var(--air-black); outline: none; }
+  .air-input-group { border-radius: 12px 0 0 12px !important; border: 1px solid #b0b0b0; background-color: #f8f9fa; font-weight: bold; }
+  .custom-switch .form-check-input:checked { background-color: var(--air-red); border-color: var(--air-red); }
+  .btn-launch { background: radial-gradient(circle at center, #FF385C 0%, #E61E4D 100%); color: #fff; border: none; transition: 0.4s; }
+  .btn-launch:hover { transform: scale(1.01); box-shadow: 0 10px 20px rgba(230, 30, 77, 0.25); color: #fff; }
+  #image-preview-container { border: 2px dashed #ddd; background: #fafafa; }
+  .input-group input{ 
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0 !important;
+}
+/* 1. Remove focus effects for inputs inside this specific section */
+#Pricing_Capacity_input .air-input:focus, 
+#Pricing_Capacity_input .air-input:active,
+#Pricing_Capacity_input .form-control.air-input:focus {
+    border-color: #b0b0b0 !important;   /* Keeps original grey */
+    box-shadow: none !important;        /* Removes blue/black glow */
+    outline: none !important;           /* Removes browser outline */
+    background-color: #fff !important;  /* Prevents slight grey shift on focus */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* input url preview */
+/* Styling for the dynamic gallery previews */
+.gallery-preview-card {
+    position: relative;
+    aspect-ratio: 3 / 2; /* Keeps your 3/2 landscape preference */
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #eeeeee;
+    background: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.gallery-preview-card:hover .preview-img {
+    transform: scale(1.08);
+}
+
+.preview-index {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #222;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Subtle animation when a new input appears */
+.animate-in {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // === 1. ELEMENT SELECTIONS ===
+    const form = document.querySelector('.needs-validation');
+    const inputContainer = document.getElementById('image-input-container');
+    const galleryGrid = document.getElementById('gallery-preview-grid');
+    const fileInput = document.getElementById('file-input');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    // === 2. STATE MANAGEMENT ===
+    // Persistent storage for files to prevent overwriting on new selections
+    let dt = new DataTransfer();
+
+    // === 3. CORE GALLERY FUNCTIONS ===
+
+    /**
+     * Renders all images (URLs and Files) into the preview grid
+     */
+    const renderGallery = () => {
+        galleryGrid.innerHTML = '';
+        const urlInputs = inputContainer.querySelectorAll('.image-url-input');
+
+        // Render URL-based previews
+        urlInputs.forEach((input, i) => {
+            const val = input.value.trim();
+            if (val !== "") addPreviewToGrid(val, 'url', i);
+        });
+
+        // Render File-based previews
+        Array.from(dt.files).forEach((file, i) => {
+            const url = URL.createObjectURL(file);
+            addPreviewToGrid(url, 'file', i);
+        });
+    };
+
+    /**
+     * Generates HTML for a single preview card with a remove icon
+     */
+    const addPreviewToGrid = (src, type, index) => {
+        const col = document.createElement('div');
+        col.className = 'col animate-in';
+        col.innerHTML = `
+            <div class="gallery-preview-card border rounded-3 position-relative overflow-hidden shadow-sm" style="aspect-ratio: 1/1;">
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle p-1 d-flex shadow" 
+                        onclick="removeMedia('${type}', ${index})" style="z-index: 10; width: 24px; height: 24px; justify-content: center; align-items: center;">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                </button>
+                <img src="${src}" class="w-100 h-100 object-fit-cover" 
+                     onerror="this.src='https://images.unsplash.com/photo-1590247813693-5541d1c609fd?q=80&w=500&auto=format&fit=crop'">
+            </div>`;
+        galleryGrid.appendChild(col);
+    };
+
+    /**
+     * Logic to remove media items individually
+     */
+    window.removeMedia = (type, index) => {
+        if (type === 'url') {
+            const inputs = inputContainer.querySelectorAll('.image-url-input');
+            // If it's the last remaining box, just clear it. Otherwise, remove it.
+            if (inputs.length > 1) {
+                inputs[index].closest('.image-group').remove();
+            } else {
+                inputs[index].value = "";
+            }
+        } else {
+            // Reconstruct the DataTransfer object excluding the deleted index
+            const newDt = new DataTransfer();
+            Array.from(dt.files).forEach((file, i) => {
+                if (i !== index) newDt.items.add(file);
+            });
+            dt = newDt;
+            fileInput.files = dt.files; // Update the actual input state
+        }
+        renderGallery();
+    };
+
+    /**
+     * Manages dynamic creation/deletion of URL text boxes
+     */
+    const handleDynamicURLInputs = () => {
+        const inputs = Array.from(inputContainer.querySelectorAll('.image-url-input'));
+        const lastInput = inputs[inputs.length - 1];
+
+        // Add new box if last one is typed in
+        if (lastInput && lastInput.value.trim() !== "") {
+            const div = document.createElement('div');
+            div.className = 'image-group mt-1 animate-in';
+            div.innerHTML = `<input name="listing[image][]" type="text" class="form-control air-input image-url-input" placeholder="Paste another URL...">`;
+            inputContainer.appendChild(div);
+        }
+
+        // Remove empty boxes to keep it clean (except the last one)
+        inputs.forEach((input, i) => {
+            if (i !== inputs.length - 1 && input.value.trim() === "" && inputs.length > 1) {
+                input.closest('.image-group').remove();
+            }
+        });
+    };
+
+    // === 4. EVENT LISTENERS ===
+
+    // Monitor URL typing
+    inputContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('image-url-input')) {
+            handleDynamicURLInputs();
+            renderGallery();
+        }
+    });
+
+    // Monitor File uploads (Adds to existing list)
+    fileInput.addEventListener('change', function() {
+        for (let file of this.files) {
+            dt.items.add(file);
+        }
+        this.files = dt.files; // Maintain the persistent file list
+        renderGallery();
+    });
+
+    // Form Validation and Submission UX
+    if (form) {
+        form.addEventListener('submit', (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // Show loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    if (btnText) btnText.innerText = "Launching Listing...";
+                    if (btnSpinner) btnSpinner.classList.remove('d-none');
+                }
+            }
+            form.classList.add('was-validated');
+        }, false);
+    }
+});
+
+/**
+ * Update Category Hint (Global function for onchange)
+ */
+function updateCategoryHint() {
+    const categoryHints = {
+        "Rooms": "A private room in a home, plus access to shared spaces.",
+        "Hotels": "A professional hospitality stay, including boutique hotels.",
+        "Entire Home": "Guests have the whole place to themselves. Includes a kitchen.",
+        "Cabins": "Secluded, rustic homes usually located in woods or rural areas.",
+        "Luxe": "High-end architecture and top-tier service."
+    };
+    const select = document.getElementById('category');
+    const hintDiv = document.getElementById('category-hint');
+    if (hintDiv && categoryHints[select.value]) {
+        hintDiv.innerHTML = `<strong>Definition:</strong> ${categoryHints[select.value]}`;
+    }
+}
+</script>

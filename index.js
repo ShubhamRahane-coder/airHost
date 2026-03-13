@@ -1,9 +1,11 @@
+// import dotenv from "dotenv";
+// dotenv.config();
+import 'dotenv/config';
 import express from "express";
 import mongoose from "mongoose";
 import session from "express-session";
 import flash from "connect-flash";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
 import ejsMate from "ejs-mate";
 import methodOverride from "method-override";
 import path from "path";
@@ -15,12 +17,14 @@ import Listing from "./models/listing.js";
 import Review from "./models/review.js";
 import Reservation from "./models/reservation.js"; 
 
-
 // Middleware
 import { validateBody } from "./middleware/validate.js";
 import { userRegisterSchema, listingSchema, reviewSchema } from "./schemas/schemas.js";
 
-dotenv.config();
+// CONFIG of cloudinary
+import { cloudinary, storage } from './cloudinary/index.js';
+import multer from "multer";
+const upload = multer({ storage });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -483,6 +487,10 @@ app.get("/user/listings", isLoggedIn, asyncWrap(async (req, res) => {
 
 app.get("/listings/new", isLoggedIn, (req, res) => {
     // Pass isEdit: false and an empty listing object so the form doesn't crash
+    console.log("--- APP.JS ENV CHECK ---");
+console.log("CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ Found" : "❌ MISSING");
+console.log("API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ Found" : "❌ MISSING");
+console.log("------------------------");
     res.render("listings/new", { 
         title: "Become an airHost", 
         isEdit: false, 
@@ -493,50 +501,69 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 
 app.post("/listings/createListing",
   isLoggedIn,
+  // 1. Multer catches the file stream and uploads to Cloudinary
+  upload.array("listing[fileImages]"), 
   fixAmenities,
-  validateBody(listingSchema),
+  // We validate after Multer so Joi can see the file data if needed
+  validateBody(listingSchema), 
   asyncWrap(async (req, res) => {
     const { listing } = req.body;
+    let finalImages = [];
 
-    // 1. Image Cleanup: Filter empty boxes and trim whitespace
-    if (listing.image && Array.isArray(listing.image)) {
-        listing.image = listing.image
+    // 2. Process URL Inputs (Manual Links)
+    // We ensure it's an array; if it's a single string, we wrap it.
+    const rawImageUrls = Array.isArray(listing.image) 
+        ? listing.image 
+        : (listing.image ? [listing.image] : []);
+
+    if (rawImageUrls.length > 0) {
+        const urlImages = rawImageUrls
             .map(url => url.trim())
             .filter(url => url !== "")
             .map(url => ({
                 url,
-                filename: "listingimage"
+                filename: "url_upload"
             }));
+        finalImages = [...urlImages];
     }
 
-    // 2. Data Normalization: Ensure numbers are actually numbers
-    listing.price = Math.abs(Number(listing.price));
-    listing.cleaningFee = Math.abs(Number(listing.cleaningFee || 0));
-    listing.serviceFeePct = Math.min(100, Math.max(0, Number(listing.serviceFeePct || 3)));
-    listing.guests = Math.max(1, Number(listing.guests || 1));
+    // 3. Process File Uploads (Cloudinary Results)
+    // req.files is populated by upload.array()
+    if (req.files && req.files.length > 0) {
+        const uploadedFiles = req.files.map(f => ({
+            url: f.path,      // The secure Cloudinary URL
+            filename: f.filename
+        }));
+        finalImages = [...finalImages, ...uploadedFiles];
+    }
 
-    // 3. Document Creation
-    const newListing = new Listing({
+    // 4. Assign Merged Array back to the listing
+    listing.image = finalImages;
+
+    // 5. Hard Data Normalization (Security & Cleanup)
+    const normalizedData = {
         ...listing,
+        price: Math.abs(Number(listing.price)),
+        cleaningFee: Math.abs(Number(listing.cleaningFee || 0)),
+        serviceFeePct: Math.min(100, Math.max(0, Number(listing.serviceFeePct || 3))),
+        guests: Math.max(1, Number(listing.guests || 1)),
         owner: req.session.userId,
-        isVerified: false // Admin must verify before it hits index
-    });
+        isVerified: false // Always reset to false on new creation
+    };
 
+    // 6. Save to MongoDB
+    const newListing = new Listing(normalizedData);
     await newListing.save();
     
-    // 4. Success Response
     req.flash("success", "Listing successfully submitted for verification!");
 
-    // Popup Logic: Closes the "New Listing" tab and updates the main tab
+    // 7. Popup Handling Logic
     res.send(`
         <script>
             if (window.opener && !window.opener.closed) {
-                // Redirect the parent window to the new listing
                 window.opener.location.href = "/listings/${newListing._id}";
-                // Close this popup
                 window.close();
             } else {
-                // Fallback if user refreshed the main tab or closed it
                 window.location.href = "/listings/${newListing._id}";
             }
         </script>
@@ -626,66 +653,88 @@ app.put(
   "/listings/:id",
   isLoggedIn,
   validateObjectId,
+  upload.array("listing[fileImages]"), // 1. Catch new local file uploads
   fixAmenities,
-  validateBody(listingSchema),
   asyncWrap(async (req, res) => {
     const { id } = req.params;
 
-    // 1. Fetch current listing to check ownership and get fallback values
+    // Fetch existing listing
     const listing = await Listing.findById(id);
     if (!listing) {
       req.flash("error", "Listing not found!");
       return res.redirect("/listings");
     }
 
-    // 🔐 Authorization Check (Owner or Admin)
+    // 🔐 Authorization
     const isAdmin = res.locals.currentUser?.role === "admin";
     if (!listing.owner.equals(req.session.userId) && !isAdmin) {
       req.flash("error", "Unauthorized action.");
       return res.redirect(`/listings/${id}`);
     }
 
-    // 2. Extract and Sanitize Data
     const updateData = { ...req.body.listing };
 
-    // Clean Numeric Fields (Price, Fees, Guests)
+    // --- 2. Sanitize Numbers ---
     updateData.price = Math.abs(Number(updateData.price));
     updateData.cleaningFee = Math.abs(Number(updateData.cleaningFee || 0));
     updateData.serviceFeePct = Math.min(100, Math.max(0, Number(updateData.serviceFeePct || 3)));
     updateData.guests = Math.max(1, Number(updateData.guests || 1));
 
-    // Clean Coordinates (Fall back to current DB values if inputs are empty)
-    updateData.lat = updateData.lat ? Number(updateData.lat) : listing.lat;
-    updateData.lng = updateData.lng ? Number(updateData.lng) : listing.lng;
+    // --- 3. Handle REMOVALS (Cloudinary & DB) ---
+    // 'deleteImages' is the array of filenames/public_ids from your frontend 'X' buttons
+    if (req.body.deleteImages && Array.isArray(req.body.deleteImages)) {
+      for (let filename of req.body.deleteImages) {
+        // Only call Cloudinary if it's not a generic URL string
+        if (filename !== "listingimage" && filename !== "url_upload") {
+           try {
+               await cloudinary.uploader.destroy(filename); 
+           } catch (err) {
+               console.error("Cloudinary Cleanup Failed:", filename, err);
+           }
+        }
+      }
+      // Remove the matching images from the listing's local image array
+      listing.image = listing.image.filter(img => !req.body.deleteImages.includes(img.filename));
+    }
 
-    // 3. Dynamic Image Handling 
-    // This logic allows you to delete specific images by clearing their URL inputs
+    // --- 4. Handle NEW FILE Uploads ---
+    if (req.files && req.files.length > 0) {
+      const newImgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
+      listing.image.push(...newImgs);
+    }
+
+    // --- 5. Handle NEW URL Inputs ---
     if (updateData.image && Array.isArray(updateData.image)) {
-      updateData.image = updateData.image
-        .map(url => url.trim())
-        .filter(url => url !== "") // Removes empty strings
-        .map(url => ({
-          url: url,
-          filename: "listingimage"
-        }));
+        const urlImages = updateData.image
+            .map(url => url.trim())
+            .filter(url => url !== "")
+            // Only add if this specific URL isn't already in the gallery
+            .filter(url => !listing.image.some(existing => existing.url === url))
+            .map(url => ({
+                url,
+                filename: "url_upload"
+            }));
+        listing.image.push(...urlImages);
     }
 
-    // 4. Admin-Only Verification logic
+    // --- 6. Admin Verification ---
     if (isAdmin && updateData.isVerified !== undefined) {
-      updateData.isVerified = updateData.isVerified === "true";
+      listing.isVerified = updateData.isVerified === "true";
     } else {
-      delete updateData.isVerified; // Prevent users from verifying themselves
+      // Non-admins cannot verify listings
+      delete updateData.isVerified; 
     }
 
-    // 5. Update Database
-    await Listing.findByIdAndUpdate(id, updateData, { 
-      runValidators: true, 
-      new: true 
-    });
+    // --- 7. Finalize and Save ---
+    // Remove the image array from updateData so Object.assign doesn't overwrite our manual array work
+    delete updateData.image; 
+    Object.assign(listing, updateData);
+    
+    await listing.save();
 
     req.flash("success", "Listing updated successfully!");
 
-    // 6. Response for Popup handling
+    // Popup Script Handler
     res.send(`
       <script>
         if (window.opener && !window.opener.closed) {
@@ -698,7 +747,6 @@ app.put(
     `);
   })
 );
-
 
 
 

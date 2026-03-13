@@ -32,7 +32,8 @@
 
     <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
       <form action="/listings/<%= listing._id %>?_method=PUT" method="POST"
-            class="d-flex flex-column gap-5 needs-validation" novalidate>
+      enctype="multipart/form-data" 
+      class="d-flex flex-column gap-5 needs-validation" novalidate>
 
        <section>
   <h6 class="section-title">1. Property Identity</h6>
@@ -147,51 +148,45 @@
           </div>
         </section>
 
-       <section id="media-section">
+  <section id="media-section">
   <h6 class="section-title">3. Media & Story</h6>
   
   <div class="mb-4">
-    <label class="form-label air-label">Property Gallery (URLs)</label>
-    <p class="text-muted extra-small mb-3" style="font-size: 0.65rem; letter-spacing: 1px;">
-        PASTE A URL TO ADD MORE BOXES. CLEAR A BOX TO REMOVE IT.
-    </p>
+    <label class="form-label air-label">Property Gallery</label>
+    <p class="text-muted extra-small mb-3">Upload files or paste external image URLs.</p>
     
-    <div id="image-input-container" class="d-flex flex-column gap-3">
+    <div class="mb-3">
+        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="document.getElementById('file-input').click()">
+            <i class="fa-solid fa-cloud-arrow-up me-2 text-primary"></i> Upload Photos
+        </button>
+        <input type="file" id="file-input" name="listing[fileImages]" class="d-none" multiple accept="image/*">
+    </div>
+
+    <div id="image-input-container" class="d-flex flex-column gap-2 mb-3">
       <% if (listing.image && listing.image.length > 0) { %>
         <% listing.image.forEach((img, index) => { %>
           <div class="image-group">
             <input name="listing[image][]" type="text" class="form-control air-input image-url-input" 
-                   value="<%= img.url %>" placeholder="Paste high-quality image URL..." <%= index === 0 ? 'required' : '' %>>
+                   value="<%= img.url %>" placeholder="Paste image URL..." <%= index === 0 ? 'required' : '' %>>
+            <input type="hidden" class="existing-filename" value="<%= img.filename %>">
           </div>
         <% }) %>
-      <% } else { %>
-        <div class="image-group">
-          <input name="listing[image][]" type="text" class="form-control air-input image-url-input" 
-                 placeholder="Paste high-quality image URL..." required>
-        </div>
       <% } %>
+      <div class="image-group">
+          <input name="listing[image][]" type="text" class="form-control air-input image-url-input" placeholder="Add another image URL...">
+      </div>
     </div>
+
+    <div id="gallery-preview-grid" class="row row-cols-2 row-cols-md-4 g-3 mb-4"></div>
+    
+    <div id="delete-tracker"></div>
   </div>
 
-  <div id="gallery-preview-grid" class="row row-cols-2 row-cols-md-4 g-3 mb-4"></div>
-
-  <div>
+  <div class="mb-3">
     <label for="description" class="form-label air-label">About this place</label>
-    <textarea 
-        id="description" 
-        name="listing[description]" 
-        class="form-control air-input" 
-        style="min-height:150px;" 
-        required 
-        minlength="10" 
-        placeholder="Share what makes your place special..."
-    ><%= listing.description || '' %></textarea>
-    <div class="invalid-feedback">
-        Description must be at least 10 characters long.
-    </div>
-</div>
+    <textarea id="description" name="listing[description]" class="form-control air-input" style="min-height:150px;" required minlength="10"><%= listing.description %></textarea>
+  </div>
 </section>
-
        <section>
   <h6 class="section-title">4. Location & Coordinates</h6>
   <div class="row g-3">
@@ -352,7 +347,59 @@
     border-radius: 4px;
     z-index: 5;
 }
+/* Enhanced Preview Cards */
+.gallery-preview-card {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fdfdfd;
+    border: 1px solid #eaeaea;
+    transition: transform 0.2s ease;
+}
 
+.gallery-preview-card:hover {
+    transform: translateY(-2px);
+}
+
+/* New Floating Remove Button */
+.remove-media-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,0.05);
+    color: #222;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.remove-media-btn:hover {
+    background: #fff;
+    color: var(--air-red);
+    transform: scale(1.1);
+}
+
+.media-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
 .animate-in {
     animation: fadeIn 0.3s ease-out;
 }
@@ -364,7 +411,7 @@
 </style>
 
 <script>
-  // 1. Category Definitions
+  // 1. CATEGORY DEFINITIONS & UI HINTS
   const categoryHints = {
     "Rooms": "A private room in a home, plus access to shared spaces.",
     "Hotels": "A professional hospitality stay, including boutique hotels or hostels.",
@@ -374,7 +421,6 @@
     "Trending": "Properties with unique design or high demand this season."
   };
 
-  // 2. Global Category Hint Function (needed for the onchange attribute in HTML)
   function updateCategoryHint() {
     const select = document.getElementById('category');
     const hintDiv = document.getElementById('category-hint');
@@ -383,45 +429,135 @@
     }
   }
 
-  // 3. Main Logic Wrapper
-  (() => {
-    'use strict'
+  // 2. MAIN FORM & MEDIA LOGIC
+  document.addEventListener('DOMContentLoaded', () => {
+    'use strict';
 
     // Element Selection
     const form = document.querySelector('.needs-validation');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = document.getElementById('btnText');
     const btnSpinner = document.getElementById('btnSpinner');
-    const imgInput = document.getElementById('image');
-    const preview = document.getElementById('image-preview');
-    const previewContainer = document.getElementById('image-preview-container');
     const priceInput = document.getElementById('price');
-    const serviceFeeInput = document.getElementById('serviceFee'); // Your specific fee field
-    const SERVICE_FEE_PCT = 0.03; // 3% Platform Fee
+    const serviceFeeInput = document.getElementById('serviceFeePct'); 
+    const container = document.getElementById('image-input-container');
+    const grid = document.getElementById('gallery-preview-grid');
+    const fileInput = document.getElementById('file-input');
+    const deleteTracker = document.getElementById('delete-tracker');
+    
+    const SERVICE_FEE_PCT = 0.03; 
+    let dt = new DataTransfer(); // Holds new local files
 
-    // --- FEE CALCULATION LOGIC ---
-    const calculateFees = () => {
-      if (priceInput && serviceFeeInput) {
-        const price = parseFloat(priceInput.value) || 0;
-        const calculatedFee = Math.round(price * SERVICE_FEE_PCT);
-        serviceFeeInput.value = calculatedFee;
-      }
-    };
+    // --- FEE CALCULATION ---
+    // const calculateFees = () => {
+    //   if (priceInput && serviceFeeInput) {
+    //     const price = parseFloat(priceInput.value) || 0;
+    //     const calculatedFee = Math.round(price * SERVICE_FEE_PCT);
+    //     // Note: Keeping your logic of updating serviceFeeInput
+    //     serviceFeeInput.value = calculatedFee;
+    //   }
+    // };
 
-    // --- IMAGE PREVIEW LOGIC ---
-    const updatePreview = () => {
-      if (imgInput && preview && previewContainer) {
-        const url = imgInput.value.trim();
-        if (url !== "") {
-          preview.src = url;
-          previewContainer.classList.remove('d-none');
-        } else {
-          previewContainer.classList.add('d-none');
+    // --- UNIVERSAL GALLERY RENDERING ---
+    function updateGallery() {
+      grid.innerHTML = ''; 
+      const groups = document.querySelectorAll('.image-group');
+
+      // Process URL inputs (Existing Cloudinary vs External URLs)
+      groups.forEach((group, index) => {
+        const input = group.querySelector('.image-url-input');
+        const url = input ? input.value.trim() : null;
+        const existingFilename = group.querySelector('.existing-filename')?.value;
+
+        if (url) {
+          addPreview(url, existingFilename ? 'existing' : 'url', index, existingFilename);
         }
+      });
+
+      // Process Selected Files
+      Array.from(dt.files).forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        addPreview(url, 'file', index);
+      });
+    }
+
+    function addPreview(src, type, index, filename = null) {
+      const col = document.createElement('div');
+      col.className = 'col animate-in';
+      col.innerHTML = `
+        <div class="gallery-preview-card shadow-sm">
+          <button type="button" class="remove-media-btn" onclick="removeMedia('${type}', ${index}, ${filename ? `'${filename}'` : 'null'})">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+          </button>
+          <img src="${src}" class="w-100 h-100 object-fit-cover">
+          ${type === 'existing' ? '<div class="media-badge">Saved</div>' : ''}
+        </div>`;
+      grid.appendChild(col);
+    }
+
+    // --- MEDIA REMOVAL ---
+    window.removeMedia = (type, index, filename = null) => {
+      if (type === 'existing') {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'deleteImages[]';
+        input.value = filename;
+        deleteTracker.appendChild(input);
+        document.querySelectorAll('.image-group')[index].remove();
+      } else if (type === 'url') {
+        const inputs = document.querySelectorAll('.image-group');
+        if (inputs.length > 1) {
+          inputs[index].remove();
+        } else {
+          inputs[index].querySelector('input').value = '';
+        }
+      } else if (type === 'file') {
+        const newDt = new DataTransfer();
+        Array.from(dt.files).forEach((file, i) => { 
+          if (i !== index) newDt.items.add(file); 
+        });
+        dt = newDt;
+        fileInput.files = dt.files;
       }
+      updateGallery();
     };
 
-    // --- FORM SUBMISSION & VALIDATION LOGIC ---
+    // --- DYNAMIC URL INPUT GENERATION ---
+    container.addEventListener('input', (e) => {
+      if (e.target.classList.contains('image-url-input')) {
+        const inputs = Array.from(document.querySelectorAll('.image-url-input'));
+        const lastInput = inputs[inputs.length - 1];
+
+        // Create new input if the last one has a value
+        if (lastInput.value.trim() !== "") {
+          const div = document.createElement('div');
+          div.className = 'image-group mt-2 animate-in';
+          div.innerHTML = `
+              <input name="listing[image][]" type="text" class="form-control air-input image-url-input" placeholder="Add another image URL...">`;
+          container.appendChild(div);
+        }
+
+        // Remove empty inputs that aren't the last one
+        inputs.forEach((input, index) => {
+            if (input.value.trim() === "" && inputs.length > 1 && index !== inputs.length - 1) {
+                input.closest('.image-group').remove();
+            }
+        });
+
+        updateGallery();
+      }
+    });
+
+    // --- FILE SELECTION ---
+    fileInput?.addEventListener('change', function() {
+      for (let file of this.files) {
+        dt.items.add(file);
+      }
+      this.files = dt.files;
+      updateGallery();
+    });
+
+    // --- FORM VALIDATION & SUBMISSION ---
     if (form) {
       form.addEventListener('submit', event => {
         if (!form.checkValidity()) {
@@ -429,114 +565,24 @@
           event.stopPropagation();
           
           form.classList.add('was-validated');
-
-          // Smooth scroll to first error
           const firstInvalid = form.querySelector(':invalid');
           if (firstInvalid) {
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         } else {
-          // Valid form: Handle Loading State
           if (submitBtn) {
             submitBtn.disabled = true; 
             if (btnText) btnText.innerText = "Updating...";
             if (btnSpinner) btnSpinner.classList.remove('d-none');
           }
-          // Form proceeds to submit normally
         }
       }, false);
     }
 
-    // --- EVENT LISTENERS & INITIALIZATION ---
-    imgInput?.addEventListener('input', updatePreview);
+    // --- INITIALIZATION ---
     priceInput?.addEventListener('input', calculateFees);
-
-    window.addEventListener('DOMContentLoaded', () => {
-      updateCategoryHint();
-      updatePreview();
-      calculateFees();
-    });
-
-    // Fallback for window load to ensure initial calculations
-    window.addEventListener('load', () => {
-      updatePreview();
-      calculateFees();
-    });
-
-  })();
-
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('image-input-container');
-    const grid = document.getElementById('gallery-preview-grid');
-
-    function updateGallery() {
-        const inputs = document.querySelectorAll('.image-url-input');
-        grid.innerHTML = ''; // Clear current previews
-
-        inputs.forEach((input, index) => {
-            const url = input.value.trim();
-            
-            // 1. Render Preview if URL exists
-            if (url) {
-                const col = document.createElement('div');
-                col.className = 'col animate-in';
-                col.innerHTML = `
-                    <div class="gallery-preview-card">
-                        <span class="preview-index">#${index + 1}</span>
-                        <img src="${url}" class="preview-img" onerror="this.src='https://via.placeholder.com/300x200?text=Invalid+URL'">
-                    </div>
-                `;
-                grid.appendChild(col);
-            }
-
-            // 2. Logic to add/remove input boxes
-            // If the last input has text, add a new empty one
-            if (index === inputs.length - 1 && url !== "") {
-                const newGroup = document.createElement('div');
-                newGroup.className = 'image-group animate-in mt-2';
-                newGroup.innerHTML = `<input name="listing[image][]" type="text" class="form-control air-input image-url-input" placeholder="Add another image URL...">`;
-                container.appendChild(newGroup);
-                // Attach listener to the new input
-                newGroup.querySelector('input').addEventListener('input', updateGallery);
-            }
-
-            // If an input is empty and it's NOT the last one, remove it
-            if (url === "" && inputs.length > 1 && index !== inputs.length - 1) {
-                input.parentElement.remove();
-                updateGallery();
-            }
-        });
-    }
-
-    // Initial listener for existing inputs
-    container.addEventListener('input', (e) => {
-        if (e.target.classList.contains('image-url-input')) {
-            updateGallery();
-        }
-    });
-
-    // Run once on load to show existing images
+    updateCategoryHint();
+    calculateFees();
     updateGallery();
-});
-</script>
-
-
-
-
-
-<script>
-(() => {
-  'use strict'
-  const forms = document.querySelectorAll('.needs-validation')
-  Array.from(forms).forEach(form => {
-    form.addEventListener('submit', event => {
-      if (!form.checkValidity()) {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-      form.classList.add('was-validated')
-    }, false)
-  })
-})()
+  });
 </script>
